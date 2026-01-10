@@ -110,7 +110,7 @@ function initializeDashboardSheet(sheet) {
  */
 function writeDashboardStats(sheet, stats) {
   const data = [
-    ["【全投稿】"],
+    ["【全投稿】", ""],
     ["今週の投稿数", stats.thisWeekPostCount],
     ["先週の投稿数", stats.lastWeekPostCount],
     ["今週の総IMP数", stats.thisWeekTotalImp],
@@ -121,14 +121,14 @@ function writeDashboardStats(sheet, stats) {
     ["先週の平均IMP", Math.round(stats.lastWeekAvgImp)],
     ["今週の中央値IMP", Math.round(stats.thisWeekMedianImp)],
     ["先週の中央値IMP", Math.round(stats.lastWeekMedianImp)],
-    [""],
-    ["【オーガニック投稿】"],
+    ["", ""],
+    ["【オーガニック投稿】", ""],
     ["今週の投稿数", stats.thisWeekOrganicPostCount],
     ["今週の総IMP数", stats.thisWeekOrganicTotalImp],
     ["今週の平均IMP", Math.round(stats.thisWeekOrganicAvgImp)],
     ["今週の中央値IMP", Math.round(stats.thisWeekOrganicMedianImp)],
-    [""],
-    ["【PR投稿】"],
+    ["", ""],
+    ["【PR投稿】", ""],
     ["今週の投稿数", stats.thisWeekPRPostCount],
     ["今週の総IMP数", stats.thisWeekPRTotalImp],
     ["今週の平均IMP", Math.round(stats.thisWeekPRAvgImp)],
