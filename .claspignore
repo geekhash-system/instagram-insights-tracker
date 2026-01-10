@@ -6,7 +6,7 @@
 README.md
 
 # Environment files
-.env.gs
+# .env.gs  # コメントアウト - 今回はpushする
 
 # macOS
 .DS_Store
