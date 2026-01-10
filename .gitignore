@@ -2,7 +2,8 @@
 .env.gs
 
 # clasp設定
-.clasp.json
+# .clasp.json はテンプレートとしてリポジトリに含める（{{SCRIPT_ID}}プレースホルダーあり）
+# 実際の認証情報は GitHub Actions Secrets で管理
 
 # macOS
 .DS_Store
