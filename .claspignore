@@ -8,8 +8,8 @@ README.md
 # GitHub
 .github/**
 
-# Environment files (GitHub Actionsで自動生成される)
-.env.gs
+# Environment files - GitHub Actionsで動的に生成されるため、pushする必要がある
+# .env.gs は除外しない
 
 # macOS
 .DS_Store
