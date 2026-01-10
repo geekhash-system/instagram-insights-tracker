@@ -249,4 +249,3 @@ MIT License - 個人利用・商用利用ともに自由に使用できます。
 
 参考プロジェクト:
 - [GAS_instagram_reel_viewcount_tracker](../buzz/GAS_instagram_reel_viewcount_tracker/)
-- [hinome-backend](../hinome/)
