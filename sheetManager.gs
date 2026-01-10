@@ -9,10 +9,7 @@
  */
 function initializeAccountSheet(sheet) {
   // 説明行を追加（1行目）
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1; // 0-indexed
-  const explanation = `このシートは${year}年${month}月以降のInstagramインサイトデータを記録しています。毎日19時に自動更新されます。`;
+  const explanation = `このシートはInstagramインサイトデータを記録しています。毎日19時に自動更新されます。`;
 
   sheet.getRange(1, 1).setValue(explanation);
   sheet.getRange(1, 1).setFontWeight("bold").setBackground("#FFF9C4").setFontSize(10);
