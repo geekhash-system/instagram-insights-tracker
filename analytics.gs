@@ -135,10 +135,26 @@ function initializeDashboardSheet(sheet, dateRange) {
  * @param {Object} stats - 統計データ
  */
 function writeDashboardStats(sheet, stats) {
+  // 今週と先週の期間を計算
+  const now = new Date();
+  const thisWeekStart = new Date(now);
+  thisWeekStart.setDate(now.getDate() - now.getDay());
+  thisWeekStart.setHours(0, 0, 0, 0);
+  const thisWeekEnd = new Date(thisWeekStart);
+  thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+  const lastWeekEnd = new Date(lastWeekStart);
+  lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+
+  const thisWeekRange = `${formatDate(thisWeekStart)} - ${formatDate(thisWeekEnd)}`;
+  const lastWeekRange = `${formatDate(lastWeekStart)} - ${formatDate(lastWeekEnd)}`;
+
   const data = [
     ["【全投稿】", ""],
-    ["今週の投稿数", stats.thisWeekPostCount],
-    ["先週の投稿数", stats.lastWeekPostCount],
+    [`今週の投稿数（${thisWeekRange}）`, stats.thisWeekPostCount],
+    [`先週の投稿数（${lastWeekRange}）`, stats.lastWeekPostCount],
     ["今週の総IMP数", stats.thisWeekTotalImp],
     ["先週の総IMP数", stats.lastWeekTotalImp],
     ["IMP差分", stats.thisWeekTotalImp - stats.lastWeekTotalImp],
