@@ -91,6 +91,9 @@ function fetchAccountData(account, date, time) {
     // 日次履歴を記録
     addHistoryRecord(sheet, date, time);
 
+    // 投稿日時で降順ソート（新しい投稿が上）
+    sortSheetByDateDesc(sheet);
+
     // 週次ダッシュボード更新
     updateWeeklyDashboard(account.name);
 

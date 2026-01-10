@@ -239,3 +239,24 @@ function getSheetData(sheet) {
     return [];
   }
 }
+
+/**
+ * シートを投稿日時で降順ソート（新しい投稿が上）
+ * @param {Sheet} sheet - 対象シート
+ */
+function sortSheetByDateDesc(sheet) {
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 2) return; // データがない場合はスキップ
+
+    // データ範囲を取得（説明行1行目、ヘッダー2行目を除く、3行目から）
+    const dataRange = sheet.getRange(3, 1, lastRow - 2, sheet.getLastColumn());
+
+    // B列（投稿日時）で降順ソート
+    dataRange.sort({column: 2, ascending: false});
+
+    Logger.log(`📊 シートを投稿日時で降順ソート完了`);
+  } catch (e) {
+    Logger.log(`エラー in sortSheetByDateDesc: ${e.toString()}`);
+  }
+}
