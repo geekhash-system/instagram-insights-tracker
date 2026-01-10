@@ -1,0 +1,19 @@
+# Git files
+.git/**
+.gitignore
+
+# Documentation
+README.md
+
+# Environment files
+.env.gs
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/**
+.idea/**
+
+# Logs
+*.log

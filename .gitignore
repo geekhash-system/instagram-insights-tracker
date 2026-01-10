@@ -1,0 +1,19 @@
+# 環境変数（秘密情報）
+.env.gs
+
+# clasp設定
+.clasp.json
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*~

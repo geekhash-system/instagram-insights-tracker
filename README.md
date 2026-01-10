@@ -1,0 +1,252 @@
+# 📊 Instagram Insights Tracker
+
+NERAとKARA子のInstagramインサイトを毎日19時に自動取得し、週次分析を行うGoogle Apps Scriptツールです。
+
+---
+
+## 主な機能
+
+- **毎日19時に自動実行**: Instagram Graph APIからインサイトを自動取得
+- **直近90日分のデータ管理**: 投稿データとインサイトを自動更新
+- **週次ダッシュボード**: 今週/先週の比較分析（投稿数、IMP数、平均、中央値）
+- **PR投稿管理**: 手動設定 + 過去10投稿の中央値ベース警告機能
+- **日次履歴記録**: 毎日のIMP数推移を自動記録
+
+---
+
+## セットアップ
+
+### 1. スプレッドシート作成
+
+1. 新しいGoogleスプレッドシートを作成
+2. スプレッドシートIDをコピー
+   ```
+   https://docs.google.com/spreadsheets/d/【ここがID】/edit
+   ```
+
+### 2. Google Apps Scriptプロジェクト作成
+
+#### 方法A: Webエディタを使う（推奨）
+
+1. スプレッドシートを開く
+2. メニューバーから「拡張機能」→「Apps Script」をクリック
+3. 以下のファイルを作成してコピー＆ペースト:
+   - `config.gs` - `SPREADSHEET_ID`を実際のIDに置き換える
+   - `.env.gs` - アクセストークンを設定
+   - `utils.gs`
+   - `instagramAPI.gs`
+   - `sheetManager.gs`
+   - `analytics.gs`
+   - `main.gs`
+   - `appsscript.json`
+
+#### 方法B: claspを使う（開発者向け）
+
+```bash
+# claspのインストール
+npm install -g @google/clasp
+
+# Googleアカウントでログイン
+clasp login
+
+# プロジェクト作成
+clasp create --type sheets --title "Instagram Insights Tracker"
+
+# .clasp.jsonのscriptIdを確認
+cat .clasp.json
+
+# コードをプッシュ
+clasp push
+
+# Apps Scriptエディタを開く
+clasp open
+```
+
+### 3. 初回実行と権限の承認
+
+1. Apps Scriptエディタで`onOpen`関数を実行
+2. 「権限を確認」→ Googleアカウントを選択
+3. 「詳細」→「（プロジェクト名）に移動」→「許可」
+4. スプレッドシートをリロードして、カスタムメニューが表示されることを確認
+
+---
+
+## 使い方
+
+### 初回セットアップ
+
+1. スプレッドシートを開く
+2. メニューから「📊 インサイト追跡ツール」→「READMEシートを挿入」
+3. メニューから「📊 インサイト追跡ツール」→「毎日19時の自動実行を開始」
+4. メニューから「📊 インサイト追跡ツール」→「今すぐデータ取得」（初回テスト）
+
+### データ確認
+
+- **NERA_25/12~** シート: NERAのインサイトデータ
+- **KARA子_25/12~** シート: KARA子のインサイトデータ
+- **週次_NERA** シート: NERAの週次ダッシュボード
+- **週次_KARA子** シート: KARA子の週次ダッシュボード
+
+### PR投稿の設定
+
+1. 各アカウントシートを開く
+2. F列（PR列）のチェックボックスをONにすると、その投稿がPR投稿として扱われます
+3. 週次ダッシュボードでPR投稿の警告リストが自動生成されます
+
+---
+
+## スプレッドシート構造
+
+### データシート（NERA_25/12~ / KARA子_25/12~）
+
+| 列 | 項目 | 説明 |
+|----|------|------|
+| A | メディアID | Instagram投稿ID |
+| B | 投稿日時 | 投稿された日時 |
+| C | 投稿タイプ | REELS / FEED / STORY |
+| D | キャプション | 投稿のキャプション |
+| E | パーマリンク | Instagram投稿URL |
+| F | PR | PR投稿かどうか（手動設定） |
+| G | IMP数 | ビュー数（viewsメトリクス） |
+| H | リーチ数 | リーチ数 |
+| I | いいね数 | いいね数 |
+| J | コメント数 | コメント数 |
+| K | 保存数 | 保存数 |
+| L | シェア数 | シェア数 |
+| M | エンゲージメント数 | 総エンゲージメント数 |
+| N | 最終更新日時 | データ最終更新日時 |
+| O列以降 | 履歴 | 日次履歴（「12/25取得」形式） |
+
+### 週次ダッシュボードシート（週次_NERA / 週次_KARA子）
+
+- **全投稿の統計**: 今週/先週の投稿数、総IMP数、平均IMP、中央値IMP
+- **オーガニック投稿の統計**: オーガニック投稿のみの分析
+- **PR投稿の統計**: PR投稿のみの分析
+- **オーガニック投稿 トップ5**: IMP数が高い投稿
+- **オーガニック投稿 ワースト5**: IMP数が低い投稿
+- **PR投稿警告リスト**: 過去10投稿の中央値×70%以下の投稿
+
+---
+
+## Instagram Graph API仕様
+
+### 使用メトリクス
+
+hinome-backend実装に基づき、以下のメトリクスを使用:
+
+**リール:**
+```
+comments, likes, views, reach, saved, shares, total_interactions
+```
+
+**フィード:**
+```
+saved, reach, total_interactions, views
+```
+
+**ストーリー:**
+```
+exits, views, reach, taps_forward, taps_back
+```
+
+### IMP数について
+
+- Instagram Graph APIでは、リール・フィード・ストーリー全てで **`views`** メトリクスを使用
+- `plays`や`impressions`ではなく、`views`が正しいメトリクス名
+- APIバージョン: **v18.0**（安定版）
+
+### API制限
+
+- **レート制限**: 1時間に200リクエストまで
+- **データ保持期間**: 90日（それ以前のデータは取得不可）
+- **アクセストークン**: 期限切れしない長期トークン（ユーザー提供）
+
+---
+
+## ファイル構成
+
+```
+instagram_insights_tracker/
+├── config.gs          # 設定ファイル（API設定、アカウント設定）
+├── .env.gs            # 環境変数（アクセストークン）※.gitignore登録
+├── main.gs            # メイン処理・UI・トリガー管理
+├── instagramAPI.gs    # Instagram Graph API連携
+├── sheetManager.gs    # スプレッドシート操作・データ管理
+├── analytics.gs       # 週次ダッシュボード計算ロジック
+├── utils.gs           # ユーティリティ関数
+├── appsscript.json    # Google Apps Script設定
+├── .clasp.json        # clasp設定（scriptIdは自分で設定）
+├── .claspignore       # clasp除外設定
+├── .gitignore         # Git除外設定
+└── README.md          # このファイル
+```
+
+---
+
+## トラブルシューティング
+
+### データが取得できない
+
+1. Apps Script → 実行数 でログを確認
+2. アクセストークンが正しく設定されているか確認（`.env.gs`）
+3. `SPREADSHEET_ID`が正しく設定されているか確認（`config.gs`）
+
+### 週次ダッシュボードが更新されない
+
+1. データシートに投稿データがあるか確認
+2. メニューから手動で「週次ダッシュボード更新」を実行してみる
+3. ログを確認してエラーがないかチェック
+
+### PR投稿の警告が表示されない
+
+1. PR列（F列）にチェックが入っているか確認
+2. PR投稿が10件以上あるか確認（中央値計算のため）
+3. IMP数が中央値×70%以下になっているか確認
+
+---
+
+## 拡張性
+
+### アカウント追加
+
+`config.gs`の`ACCOUNTS`配列に追加するだけ:
+
+```javascript
+{
+  name: "新しいアカウント",
+  sheetName: "新しいアカウント_25/12~",
+  dashboardSheet: "週次_新しいアカウント",
+  businessId: "Instagram Business Account ID",
+  tokenKey: "NEW_ACCOUNT_ACCESS_TOKEN"
+}
+```
+
+`.env.gs`にトークンを追加:
+
+```javascript
+const NEW_ACCOUNT_ACCESS_TOKEN = "アクセストークン";
+```
+
+---
+
+## セキュリティ
+
+⚠️ **重要**: `.env.gs`は絶対にGitHubにプッシュしないでください
+
+- `.gitignore`に登録済み
+- アクセストークンは機密情報として扱ってください
+- スプレッドシートの共有は最小限にしてください
+
+---
+
+## ライセンス
+
+MIT License - 個人利用・商用利用ともに自由に使用できます。
+
+---
+
+**Built with ❤️ using Google Apps Script**
+
+参考プロジェクト:
+- [GAS_instagram_reel_viewcount_tracker](../buzz/GAS_instagram_reel_viewcount_tracker/)
+- [hinome-backend](../hinome/)

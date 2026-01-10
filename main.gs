@@ -1,0 +1,213 @@
+// ========================================
+// main.gs - メイン処理・UI・トリガー管理
+// ========================================
+
+/**
+ * スプレッドシート開く時に実行
+ * カスタムメニューを追加
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu("📊 インサイト追跡ツール")
+    .addItem("今すぐデータ取得", "manualFetchAll")
+    .addSeparator()
+    .addItem("週次ダッシュボード更新", "manualUpdateDashboards")
+    .addSeparator()
+    .addItem("毎日19時の自動実行を開始", "setupDailyTrigger")
+    .addItem("自動実行を停止", "removeTriggers")
+    .addSeparator()
+    .addItem("READMEシートを挿入", "insertReadmeSheet")
+    .addToUi();
+}
+
+/**
+ * 全アカウントのデータを取得（定期実行用）
+ */
+function fetchAllAccounts() {
+  try {
+    Logger.log("========================================");
+    Logger.log("📅 定期実行開始: " + new Date().toLocaleString("ja-JP"));
+    Logger.log("========================================");
+
+    const { date, time } = getCurrentDateTime();
+
+    // 各アカウントを処理
+    ACCOUNTS.forEach(account => {
+      Logger.log(`\n📱 アカウント: ${account.name}`);
+      fetchAccountData(account, date, time);
+
+      // API レート制限対策
+      Utilities.sleep(1000);
+    });
+
+    Logger.log("\n========================================");
+    Logger.log("✅ 全アカウントのデータ取得完了");
+    Logger.log("========================================");
+
+  } catch (e) {
+    Logger.log(`❌ エラー in fetchAllAccounts: ${e.toString()}`);
+    handleError("fetchAllAccounts", e, { severity: "HIGH" });
+  }
+}
+
+/**
+ * 1アカウントのデータを取得
+ * @param {Object} account - アカウント設定
+ * @param {string} date - 日付（YYYY-MM-DD）
+ * @param {string} time - 時刻（HH:mm）
+ */
+function fetchAccountData(account, date, time) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = ss.getSheetByName(account.sheetName);
+
+    // シートがなければ作成
+    if (!sheet) {
+      sheet = ss.insertSheet(account.sheetName);
+      initializeAccountSheet(sheet);
+    }
+
+    // アクセストークン取得
+    const accessToken = eval(account.tokenKey); // .env.gs から取得
+
+    // メディア一覧取得
+    const mediaList = fetchMediaList(account.businessId, accessToken, DATA_FETCH_CONFIG.MAX_DAYS_BACK);
+    Logger.log(`📊 取得メディア数: ${mediaList.length}`);
+
+    // 各メディアのインサイトを取得して更新
+    mediaList.forEach((media, index) => {
+      const insights = fetchMediaInsights(media.id, media.media_product_type, accessToken);
+      updateMediaData(sheet, media, insights);
+
+      // 進捗表示（10件ごと）
+      if ((index + 1) % 10 === 0) {
+        Logger.log(`  進捗: ${index + 1} / ${mediaList.length}`);
+      }
+
+      // API レート制限対策
+      Utilities.sleep(DATA_FETCH_CONFIG.API_CALL_DELAY_MS);
+    });
+
+    // 日次履歴を記録
+    addHistoryRecord(sheet, date, time);
+
+    // 週次ダッシュボード更新
+    updateWeeklyDashboard(account.name);
+
+    Logger.log(`✅ ${account.name} のデータ取得完了`);
+
+  } catch (e) {
+    Logger.log(`❌ エラー in fetchAccountData (${account.name}): ${e.toString()}`);
+    handleError("fetchAccountData", e, { account: account.name });
+  }
+}
+
+/**
+ * 毎日19時の自動実行トリガーをセット
+ */
+function setupDailyTrigger() {
+  try {
+    removeTriggers(); // 既存削除
+
+    ScriptApp.newTrigger("fetchAllAccounts")
+      .timeBased()
+      .atHour(DATA_FETCH_CONFIG.DAILY_TRIGGER_HOUR)
+      .everyDays(1)
+      .create();
+
+    SpreadsheetApp.getUi().alert("✅ 毎日19時の自動実行を開始しました");
+  } catch (e) {
+    Logger.log(`エラー in setupDailyTrigger: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert("❌ エラー: " + e.toString());
+  }
+}
+
+/**
+ * トリガーを削除
+ */
+function removeTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === "fetchAllAccounts") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  SpreadsheetApp.getUi().alert("✅ 自動実行を停止しました");
+}
+
+/**
+ * 手動実行
+ */
+function manualFetchAll() {
+  fetchAllAccounts();
+  SpreadsheetApp.getUi().alert("✅ データ取得完了");
+}
+
+/**
+ * 週次ダッシュボード手動更新
+ */
+function manualUpdateDashboards() {
+  ACCOUNTS.forEach(account => {
+    updateWeeklyDashboard(account.name);
+  });
+  SpreadsheetApp.getUi().alert("✅ 週次ダッシュボード更新完了");
+}
+
+/**
+ * READMEシートを挿入
+ */
+function insertReadmeSheet() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    // 既存のREADMEシートがあれば削除
+    const existingSheet = ss.getSheetByName(SHEET_NAMES.README);
+    if (existingSheet) {
+      ss.deleteSheet(existingSheet);
+    }
+
+    // READMEシートを作成
+    const readmeSheet = ss.insertSheet(SHEET_NAMES.README, 0); // 先頭に挿入
+
+    const readmeContent = [
+      ["📊 Instagram インサイト追跡ツール"],
+      [""],
+      ["このツールは、NERAとKARA子のInstagramインサイトを毎日19時に自動取得し、週次分析を行います。"],
+      [""],
+      ["【使い方】"],
+      ["1. メニュー「インサイト追跡ツール」→「毎日19時の自動実行を開始」をクリック"],
+      ["2. 毎日19時に自動でデータが取得されます"],
+      ["3. 週次ダッシュボードで分析結果を確認できます"],
+      [""],
+      ["【PR投稿の設定】"],
+      ["- 各アカウントシートのF列（PR列）にチェックを入れると、PR投稿として扱われます"],
+      ["- PR投稿は過去10投稿の中央値×70%以下の場合、警告が表示されます"],
+      [""],
+      ["【シート構成】"],
+      ["- NERA_25/12~: NERAのインサイトデータ"],
+      ["- KARA子_25/12~: KARA子のインサイトデータ"],
+      ["- 週次_NERA: NERAの週次ダッシュボード"],
+      ["- 週次_KARA子: KARA子の週次ダッシュボード"],
+      [""],
+      ["【注意事項】"],
+      ["- データは直近90日分が取得されます"],
+      ["- IMP数は「views」メトリクスから取得されます（Instagram Graph API仕様）"],
+      ["- 履歴は90日分保持されます"],
+      [""],
+      ["【トラブルシューティング】"],
+      ["- データが取得できない場合: Apps Script → 実行数 でログを確認してください"],
+      ["- エラーが出る場合: アクセストークンが有効か確認してください"],
+      [""],
+      ["最終更新: " + new Date().toLocaleString("ja-JP")]
+    ];
+
+    readmeSheet.getRange(1, 1, readmeContent.length, 1).setValues(readmeContent);
+    readmeSheet.getRange("A1").setFontSize(16).setFontWeight("bold");
+    readmeSheet.setColumnWidth(1, 800);
+
+    SpreadsheetApp.getUi().alert("✅ READMEシートを挿入しました");
+  } catch (e) {
+    Logger.log(`エラー in insertReadmeSheet: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert("❌ エラーが発生しました: " + e.toString());
+  }
+}
