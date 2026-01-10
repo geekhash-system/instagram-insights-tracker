@@ -22,12 +22,30 @@ function updateWeeklyDashboard(accountName) {
       return;
     }
 
-    let dashboardSheet = ss.getSheetByName(account.dashboardSheet);
+    // 週次ダッシュボードシート名を生成（年+週番号）
+    const now = new Date();
+    const weekNumber = getWeekNumber(now);
+    const year = now.getFullYear();
+    const weekSheetName = `週次_${accountName}_${year}W${String(weekNumber).padStart(2, '0')}`;
+
+    let dashboardSheet = ss.getSheetByName(weekSheetName);
 
     if (!dashboardSheet) {
-      dashboardSheet = ss.insertSheet(account.dashboardSheet);
-      initializeDashboardSheet(dashboardSheet);
+      dashboardSheet = ss.insertSheet(weekSheetName);
+      Logger.log(`📊 新しい週次シートを作成: ${weekSheetName}`);
     }
+
+    // 今週の期間を計算
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const dateRange = `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
+
+    initializeDashboardSheet(dashboardSheet, dateRange);
 
     // データを取得
     const rows = getSheetData(dataSheet);
@@ -39,6 +57,10 @@ function updateWeeklyDashboard(accountName) {
     // 今週・先週のデータを抽出
     const thisWeekData = filterByWeek(rows, 0);  // 今週
     const lastWeekData = filterByWeek(rows, -1); // 先週
+
+    Logger.log(`📊 全データ件数: ${rows.length}`);
+    Logger.log(`📅 今週のデータ件数: ${thisWeekData.length}`);
+    Logger.log(`📅 先週のデータ件数: ${lastWeekData.length}`);
 
     // オーガニック投稿とPR投稿に分ける
     const thisWeekOrganic = thisWeekData.filter(row => !row[COLUMNS.PR]);
@@ -87,7 +109,10 @@ function updateWeeklyDashboard(accountName) {
     // PR投稿の警告リスト
     writePRWarnings(dashboardSheet, rows, account);
 
-    Logger.log(`✅ 週次ダッシュボード更新完了: ${accountName}`);
+    // 古い週次シートを削除（13週以上前）
+    cleanupOldWeeklySheets(ss, 13);
+
+    Logger.log(`✅ 週次ダッシュボード更新完了: ${weekSheetName}`);
 
   } catch (e) {
     Logger.log(`エラー in updateWeeklyDashboard: ${e.toString()}`);
@@ -97,9 +122,10 @@ function updateWeeklyDashboard(accountName) {
 /**
  * ダッシュボードシートを初期化
  * @param {Sheet} sheet - ダッシュボードシート
+ * @param {string} dateRange - 期間（例: 2026/01/05 - 2026/01/11）
  */
-function initializeDashboardSheet(sheet) {
-  sheet.getRange("A1").setValue("週次ダッシュボード").setFontWeight("bold").setFontSize(16);
+function initializeDashboardSheet(sheet, dateRange) {
+  sheet.getRange("A1").setValue(`週次ダッシュボード（${dateRange}）`).setFontWeight("bold").setFontSize(16);
   sheet.getRange("A2").setValue("最終更新: ").setFontSize(10);
 }
 
@@ -285,4 +311,64 @@ function filterByWeek(rows, weekOffset) {
     const postDate = new Date(row[COLUMNS.POST_DATE]);
     return postDate >= startOfWeek && postDate < endOfWeek;
   });
+}
+
+/**
+ * 週番号を取得（ISO 8601方式）
+ * @param {Date} date - 日付
+ * @return {number} 週番号
+ */
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+/**
+ * 日付をフォーマット（YYYY/MM/DD）
+ * @param {Date} date - 日付
+ * @return {string} フォーマット済み日付
+ */
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
+/**
+ * 古い週次ダッシュボードシートを削除
+ * @param {Spreadsheet} ss - スプレッドシート
+ * @param {number} weeksToKeep - 保持する週数（デフォルト: 13週）
+ */
+function cleanupOldWeeklySheets(ss, weeksToKeep = 13) {
+  try {
+    const now = new Date();
+    const cutoffDate = new Date(now);
+    cutoffDate.setDate(now.getDate() - (weeksToKeep * 7));
+
+    const sheets = ss.getSheets();
+    sheets.forEach(sheet => {
+      const sheetName = sheet.getName();
+
+      // 週次シート名のパターンマッチ: 週次_NERA_2026W02
+      const match = sheetName.match(/^週次_(.+?)_(\d{4})W(\d{2})$/);
+      if (match) {
+        const year = parseInt(match[2]);
+        const week = parseInt(match[3]);
+
+        // 週番号から日付を推定（年の最初の日曜日 + 週数）
+        const sheetDate = new Date(year, 0, 1 + (week - 1) * 7);
+
+        if (sheetDate < cutoffDate) {
+          ss.deleteSheet(sheet);
+          Logger.log(`🗑️ 古い週次シートを削除: ${sheetName}`);
+        }
+      }
+    });
+  } catch (e) {
+    Logger.log(`エラー in cleanupOldWeeklySheets: ${e.toString()}`);
+  }
 }
