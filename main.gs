@@ -198,6 +198,9 @@ function insertReadmeSheet() {
       ["- データが取得できない場合: Apps Script → 実行数 でログを確認してください"],
       ["- エラーが出る場合: アクセストークンが有効か確認してください"],
       [""],
+      ["【詳細マニュアル】"],
+      ["GitHub: https://github.com/geekhash-system/instagram-insights-tracker"],
+      [""],
       ["最終更新: " + new Date().toLocaleString("ja-JP")]
     ];
 
