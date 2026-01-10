@@ -29,8 +29,8 @@ const DASHBOARD_CONFIG = {
 
 // シート名定数
 const SHEET_NAMES = {
-  NERA: "NERA_2512~",
-  KARAKO: "KARA子_2512~",
+  NERA: "NERA",
+  KARAKO: "KARA子",
   DASHBOARD_NERA: "週次_NERA",
   DASHBOARD_KARAKO: "週次_KARA子",
   README: "はじめに（README）"

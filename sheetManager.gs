@@ -8,7 +8,17 @@
  * @param {Sheet} sheet - 対象シート
  */
 function initializeAccountSheet(sheet) {
-  // ヘッダー設定
+  // 説明行を追加（1行目）
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 0-indexed
+  const explanation = `このシートは${year}年${month}月以降のInstagramインサイトデータを記録しています。毎日19時に自動更新されます。`;
+
+  sheet.getRange(1, 1).setValue(explanation);
+  sheet.getRange(1, 1).setFontWeight("bold").setBackground("#FFF9C4").setFontSize(10);
+  sheet.getRange(1, 1, 1, 15).merge(); // A1からO1までマージ
+
+  // ヘッダー設定（2行目に移動）
   const headers = [
     "メディアID",
     "投稿日時",
@@ -27,13 +37,13 @@ function initializeAccountSheet(sheet) {
     "履歴→"
   ];
 
-  const headerRow = sheet.getRange(1, 1, 1, headers.length);
+  const headerRow = sheet.getRange(2, 1, 1, headers.length);
   headerRow.setValues([headers]);
   headerRow.setFontWeight("bold");
   headerRow.setBackground("#D3D3D3");
 
-  // F列（PR列）にチェックボックスを設定
-  sheet.getRange("F2:F1000").insertCheckboxes();
+  // F列（PR列）にチェックボックスを設定（3行目から）
+  sheet.getRange("F3:F1000").insertCheckboxes();
 
   // 列幅調整
   sheet.setColumnWidth(1, 150);  // メディアID
@@ -51,6 +61,9 @@ function initializeAccountSheet(sheet) {
   sheet.setColumnWidth(13, 120); // エンゲージメント数
   sheet.setColumnWidth(14, 150); // 最終更新日時
   sheet.setColumnWidth(15, 80);  // 履歴→
+
+  // 1行目の高さを調整
+  sheet.setRowHeight(1, 30);
 }
 
 /**
@@ -64,9 +77,9 @@ function updateMediaData(sheet, media, insights) {
     const mediaId = media.id;
     const data = sheet.getDataRange().getValues();
 
-    // 既存行を検索
+    // 既存行を検索（説明行とヘッダー行をスキップするため、i=2から開始）
     let targetRow = null;
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 2; i < data.length; i++) {
       if (data[i][COLUMNS.MEDIA_ID] === mediaId) {
         targetRow = i + 1; // 1-indexed
         break;
@@ -123,7 +136,7 @@ function updateMediaData(sheet, media, insights) {
 function addHistoryRecord(sheet, date, time) {
   try {
     const historyStartCol = COLUMNS.HISTORY_START + 1; // O列（1-indexed）
-    const historyHeaderRow = 1;
+    const historyHeaderRow = 2; // ヘッダー行は2行目に変更
 
     // 日付フォーマット: "12/25取得"
     const dateParts = date.split("-");
@@ -150,9 +163,9 @@ function addHistoryRecord(sheet, date, time) {
         .setBackground("#D3D3D3");
     }
 
-    // 各行のIMP数を記録
+    // 各行のIMP数を記録（説明行とヘッダー行をスキップするため、i=2から開始）
     const data = sheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 2; i < data.length; i++) {
       const impCount = data[i][COLUMNS.IMP_COUNT]; // G列（IMP数）
       if (impCount) {
         sheet.getRange(i + 1, targetCol).setValue(impCount);
@@ -184,7 +197,7 @@ function cleanupOldHistoryColumns(sheet, daysToKeep) {
     const columnsToDelete = [];
 
     for (let col = historyStartCol; col <= lastCol; col++) {
-      const headerValue = sheet.getRange(1, col).getValue();
+      const headerValue = sheet.getRange(2, col).getValue(); // ヘッダー行は2行目
       if (!headerValue) continue;
 
       // "12/25取得" → Date オブジェクト
