@@ -5,8 +5,11 @@
 # Documentation
 README.md
 
-# Environment files
-# .env.gs  # コメントアウト - 今回はpushする
+# GitHub
+.github/**
+
+# Environment files (GitHub Actionsで自動生成される)
+.env.gs
 
 # macOS
 .DS_Store

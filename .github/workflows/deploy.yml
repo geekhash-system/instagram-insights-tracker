@@ -1,0 +1,57 @@
+name: Deploy to Google Apps Script
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clasp
+        run: npm install -g @google/clasp
+
+      - name: Create .clasprc.json
+        run: |
+          cat > ~/.clasprc.json << 'EOF'
+          ${{ secrets.CLASPRC_JSON }}
+          EOF
+          echo "Created .clasprc.json"
+          cat ~/.clasprc.json | jq . || echo "JSON validation failed"
+
+      - name: Replace placeholders
+        run: |
+          SCRIPT_ID="${{ secrets.SCRIPT_ID_MAIN }}"
+          SPREADSHEET_ID="${{ secrets.SPREADSHEET_ID_MAIN }}"
+
+          echo "Deploying to MAIN environment"
+
+          # Replace placeholder in .clasp.json
+          sed -i "s/{{SCRIPT_ID}}/$SCRIPT_ID/" .clasp.json
+          echo "Updated .clasp.json with Script ID: $SCRIPT_ID"
+          grep "scriptId" .clasp.json
+
+          # Replace placeholder in config.gs
+          sed -i "s/{{SPREADSHEET_ID}}/$SPREADSHEET_ID/" config.gs
+          echo "Updated config.gs with Spreadsheet ID: $SPREADSHEET_ID"
+          grep "SPREADSHEET_ID" config.gs
+
+      - name: Create .env.gs from secret
+        run: |
+          cat > .env.gs << 'EOF'
+          ${{ secrets.ENV_GS }}
+          EOF
+          echo "Created .env.gs"
+
+      - name: Push to Google Apps Script
+        run: clasp push

@@ -236,6 +236,49 @@ const NEW_ACCOUNT_ACCESS_TOKEN = "アクセストークン";
 
 ---
 
+## GitHub Actions による自動デプロイ
+
+このプロジェクトはGitHub Actionsを使用して、mainブランチへのpush時に自動的にGoogle Apps Scriptへデプロイされます。
+
+### セットアップ手順
+
+1. **GitHub Secretsを設定**
+
+   リポジトリの Settings → Secrets and variables → Actions → New repository secret から以下を追加:
+
+   - `CLASPRC_JSON`: `~/.clasprc.json`の内容
+     ```bash
+     cat ~/.clasprc.json
+     ```
+
+   - `SCRIPT_ID_MAIN`: Apps ScriptのScript ID
+     ```
+     1mdKYeHhd6xFdFKz9Uef7JrWjkMay3FfTpttu9gomzGnh8zmo1SUztQeu
+     ```
+
+   - `SPREADSHEET_ID_MAIN`: スプレッドシートID
+     ```
+     1mi10KVyRkf8_svopr2Hlh4a5LJxW4QO9fSTx7EjzBGQ
+     ```
+
+   - `ENV_GS`: `.env.gs`ファイルの内容
+     ```bash
+     cat .env.gs
+     ```
+
+2. **デプロイ**
+
+   mainブランチにpushすると、GitHub Actionsが自動的に:
+   - プレースホルダ (`{{SCRIPT_ID}}`, `{{SPREADSHEET_ID}}`) を実際の値に置換
+   - `.env.gs`をSecretから生成
+   - `clasp push`でApps Scriptへデプロイ
+
+3. **デプロイ確認**
+
+   GitHub の Actions タブでワークフローの実行状況を確認できます。
+
+---
+
 ## セキュリティ
 
 ⚠️ **重要**: `.env.gs`は絶対にGitHubにプッシュしないでください
@@ -243,6 +286,7 @@ const NEW_ACCOUNT_ACCESS_TOKEN = "アクセストークン";
 - `.gitignore`に登録済み
 - アクセストークンは機密情報として扱ってください
 - スプレッドシートの共有は最小限にしてください
+- GitHub Secretsにトークンを保存し、GitHub Actionsでデプロイします
 
 ---
 

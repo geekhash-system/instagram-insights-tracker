@@ -3,8 +3,8 @@
 // ========================================
 // 注：秘密情報は .env.gs に記載（GitHubに公開しない）
 
-// スプレッドシート ID
-const SPREADSHEET_ID = "1mi10KVyRkf8_svopr2Hlh4a5LJxW4QO9fSTx7EjzBGQ";
+// スプレッドシート ID（GitHub Actionsで自動置換される）
+const SPREADSHEET_ID = "{{SPREADSHEET_ID}}";
 
 // Instagram Graph API設定
 // hinome-backendではv18.0とv21.0を使い分けている
