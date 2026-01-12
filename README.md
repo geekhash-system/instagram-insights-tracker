@@ -173,11 +173,9 @@ exits, views, reach, taps_forward, taps_back
 **投稿タイプ別の意味:**
 - **リール (REELS)**: 再生回数（動画が再生された回数）
 - **フィード (FEED)**: 投稿が表示された回数（フィード上で見られた回数）
-- **ストーリー (STORY)**: ストーリーが視聴された回数
 
 **注意点:**
 - Instagram Graph APIでは `views` が標準メトリクス（`plays`や`impressions`ではない）
-- フィード投稿の場合、厳密には `reach`（リーチ数）の方が適切な指標ですが、hinome-backend実装に倣い、統一性のため全て `views` を使用しています
 - APIバージョン: **v18.0**（安定版）
 
 ### API制限
