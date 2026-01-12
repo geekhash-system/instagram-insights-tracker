@@ -61,6 +61,12 @@ function initializeAccountSheet(sheet) {
 
   // 1行目の高さを調整
   sheet.setRowHeight(1, 30);
+
+  // 数値列にカンマ区切りフォーマットを適用（3行目以降、1000行まで）
+  // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
+  sheet.getRange("G3:M1000").setNumberFormat("#,##0");
+  // O列以降の履歴列もカンマ区切り
+  sheet.getRange("O3:Z1000").setNumberFormat("#,##0");
 }
 
 /**

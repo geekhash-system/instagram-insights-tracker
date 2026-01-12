@@ -178,6 +178,10 @@ function writeDashboardStats(sheet, stats) {
   ];
 
   sheet.getRange(4, 1, data.length, 2).setValues(data);
+
+  // 数値列にカンマ区切りフォーマットを適用
+  sheet.getRange(4, 2, data.length, 1).setNumberFormat("#,##0");
+
   sheet.getRange("A2").setValue("最終更新: " + new Date().toLocaleString("ja-JP"));
 }
 
@@ -204,6 +208,8 @@ function writeTopBottomOrganic(sheet, organicPosts) {
 
   if (top5.length > 0) {
     sheet.getRange(startRow + 2, 1, top5.length, 4).setValues(top5);
+    // IMP数列にカンマ区切りフォーマットを適用
+    sheet.getRange(startRow + 2, 3, top5.length, 1).setNumberFormat("#,##0");
   }
 
   // ワースト5
@@ -220,6 +226,8 @@ function writeTopBottomOrganic(sheet, organicPosts) {
 
   if (worst5.length > 0) {
     sheet.getRange(worstStartRow + 2, 1, worst5.length, 4).setValues(worst5);
+    // IMP数列にカンマ区切りフォーマットを適用
+    sheet.getRange(worstStartRow + 2, 3, worst5.length, 1).setNumberFormat("#,##0");
   }
 }
 
@@ -271,6 +279,8 @@ function writePRWarnings(sheet, allRows, account) {
     if (warnings.length > 0) {
       sheet.getRange(warningStartRow + 2, 1, warnings.length, 6).setValues(warnings);
       sheet.getRange(warningStartRow + 2, 1, warnings.length, 6).setBackground("#FFCCCC");
+      // IMP数、中央値、最低ライン列にカンマ区切りフォーマットを適用
+      sheet.getRange(warningStartRow + 2, 3, warnings.length, 3).setNumberFormat("#,##0");
       Logger.log(`⚠️ PR投稿警告: ${warnings.length} 件`);
     } else {
       sheet.getRange(warningStartRow + 2, 1).setValue("警告なし").setFontColor("#00AA00");
