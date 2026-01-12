@@ -106,19 +106,74 @@ function fetchAccountData(account, date, time) {
 }
 
 /**
- * 毎日19時の自動実行トリガーをセット
+ * NERA専用のデータ取得（並列実行用）
+ */
+function fetchNERA() {
+  try {
+    Logger.log("========================================");
+    Logger.log("📅 NERA データ取得開始: " + new Date().toLocaleString("ja-JP"));
+    Logger.log("========================================");
+
+    const { date, time } = getCurrentDateTime();
+    const account = ACCOUNTS.find(a => a.name === "NERA");
+
+    if (account) {
+      fetchAccountData(account, date, time);
+    }
+
+    Logger.log("✅ NERA データ取得完了");
+  } catch (e) {
+    Logger.log(`❌ エラー in fetchNERA: ${e.toString()}`);
+    handleError("fetchNERA", e, { severity: "HIGH" });
+  }
+}
+
+/**
+ * KARA子専用のデータ取得（並列実行用）
+ */
+function fetchKARAKO() {
+  try {
+    Logger.log("========================================");
+    Logger.log("📅 KARA子 データ取得開始: " + new Date().toLocaleString("ja-JP"));
+    Logger.log("========================================");
+
+    const { date, time } = getCurrentDateTime();
+    const account = ACCOUNTS.find(a => a.name === "KARA子");
+
+    if (account) {
+      fetchAccountData(account, date, time);
+    }
+
+    Logger.log("✅ KARA子 データ取得完了");
+  } catch (e) {
+    Logger.log(`❌ エラー in fetchKARAKO: ${e.toString()}`);
+    handleError("fetchKARAKO", e, { severity: "HIGH" });
+  }
+}
+
+/**
+ * 毎日19時の自動実行トリガーをセット（並列実行版）
  */
 function setupDailyTrigger() {
   try {
     removeTriggers(); // 既存削除
 
-    ScriptApp.newTrigger("fetchAllAccounts")
+    // NERA: 19:00に実行
+    ScriptApp.newTrigger("fetchNERA")
       .timeBased()
       .atHour(DATA_FETCH_CONFIG.DAILY_TRIGGER_HOUR)
       .everyDays(1)
       .create();
 
-    SpreadsheetApp.getUi().alert("✅ 毎日19時の自動実行を開始しました");
+    // KARA子: 19:05に実行（5分後）
+    ScriptApp.newTrigger("fetchKARAKO")
+      .timeBased()
+      .atHour(DATA_FETCH_CONFIG.DAILY_TRIGGER_HOUR)
+      .nearMinute(5)
+      .everyDays(1)
+      .create();
+
+    SpreadsheetApp.getUi().alert("✅ 毎日19時の自動実行を開始しました\n・NERA: 19:00\n・KARA子: 19:05");
   } catch (e) {
     Logger.log(`エラー in setupDailyTrigger: ${e.toString()}`);
     SpreadsheetApp.getUi().alert("❌ エラー: " + e.toString());
@@ -131,11 +186,11 @@ function setupDailyTrigger() {
 function removeTriggers() {
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(trigger => {
-    if (trigger.getHandlerFunction() === "fetchAllAccounts") {
+    const handlerName = trigger.getHandlerFunction();
+    if (handlerName === "fetchAllAccounts" || handlerName === "fetchNERA" || handlerName === "fetchKARAKO") {
       ScriptApp.deleteTrigger(trigger);
     }
   });
-  SpreadsheetApp.getUi().alert("✅ 自動実行を停止しました");
 }
 
 /**
