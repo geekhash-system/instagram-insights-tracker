@@ -4,10 +4,8 @@
 // 注：秘密情報は .env.gs に記載（GitHubに公開しない）
 
 // Instagram Graph API設定
-// hinome-backendではv18.0とv21.0を使い分けている
-// メディア・インサイト取得: v18.0（安定版）
-// アカウントインサイト: v21.0（新メトリクス対応）
-const INSTAGRAM_API_BASE = "https://graph.facebook.com/v18.0";
+// 全APIエンドポイントでv21.0を使用（最新メトリクス対応）
+const INSTAGRAM_API_BASE = "https://graph.facebook.com/v21.0";
 
 // データ取得設定
 const DATA_FETCH_CONFIG = {
