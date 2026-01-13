@@ -62,6 +62,14 @@ cd "$NERA_DIR"
 cp ~/dev/geekhash/instagram_insights_tracker/*.gs .
 cp ~/dev/geekhash/instagram_insights_tracker/appsscript.json .
 
+# .env.gsの確認とコピー
+if [ ! -f ~/dev/geekhash/instagram_insights_tracker/.env.gs ]; then
+  echo "❌ エラー: .env.gs が見つかりません"
+  echo "GitHub Secretsから取得するか、手動で作成してください"
+  exit 1
+fi
+cp ~/dev/geekhash/instagram_insights_tracker/.env.gs .
+
 # プレースホルダー置換
 sed -i '' "s/{{NERA_SPREADSHEET_ID}}/$NERA_SPREADSHEET_ID/g" config.gs
 sed -i '' "s/{{KARAKO_SPREADSHEET_ID}}/$KARAKO_SPREADSHEET_ID/g" config.gs
@@ -92,6 +100,14 @@ cd "$KARAKO_DIR"
 # ファイルコピー
 cp ~/dev/geekhash/instagram_insights_tracker/*.gs .
 cp ~/dev/geekhash/instagram_insights_tracker/appsscript.json .
+
+# .env.gsの確認とコピー
+if [ ! -f ~/dev/geekhash/instagram_insights_tracker/.env.gs ]; then
+  echo "❌ エラー: .env.gs が見つかりません"
+  echo "GitHub Secretsから取得するか、手動で作成してください"
+  exit 1
+fi
+cp ~/dev/geekhash/instagram_insights_tracker/.env.gs .
 
 # プレースホルダー置換
 sed -i '' "s/{{NERA_SPREADSHEET_ID}}/$NERA_SPREADSHEET_ID/g" config.gs

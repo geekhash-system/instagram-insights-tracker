@@ -194,32 +194,69 @@ function removeTriggers() {
 }
 
 /**
- * 手動実行
+ * 手動実行（現在のスプレッドシートのアカウントのみ）
  */
 function manualFetchAll() {
-  fetchAllAccounts();
-  SpreadsheetApp.getUi().alert("✅ データ取得完了");
+  try {
+    const currentSpreadsheetId = SpreadsheetApp.getActive().getId();
+    const account = ACCOUNTS.find(a => a.spreadsheetId === currentSpreadsheetId);
+
+    if (!account) {
+      SpreadsheetApp.getUi().alert("❌ エラー: このスプレッドシートに対応するアカウントが見つかりません");
+      return;
+    }
+
+    Logger.log(`========================================`);
+    Logger.log(`📅 ${account.name} データ取得開始: ${new Date().toLocaleString("ja-JP")}`);
+    Logger.log(`========================================`);
+
+    const { date, time } = getCurrentDateTime();
+    fetchAccountData(account, date, time);
+
+    Logger.log(`✅ ${account.name} データ取得完了`);
+    SpreadsheetApp.getUi().alert(`✅ ${account.name}のデータ取得完了`);
+  } catch (e) {
+    Logger.log(`❌ エラー in manualFetchAll: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
+  }
 }
 
 /**
- * 週次ダッシュボード手動更新
+ * 週次ダッシュボード手動更新（現在のスプレッドシートのアカウントのみ）
  */
 function manualUpdateDashboards() {
-  ACCOUNTS.forEach(account => {
+  try {
+    const currentSpreadsheetId = SpreadsheetApp.getActive().getId();
+    const account = ACCOUNTS.find(a => a.spreadsheetId === currentSpreadsheetId);
+
+    if (!account) {
+      SpreadsheetApp.getUi().alert("❌ エラー: このスプレッドシートに対応するアカウントが見つかりません");
+      return;
+    }
+
     updateWeeklyDashboard(account.name);
-  });
-  SpreadsheetApp.getUi().alert("✅ 週次ダッシュボード更新完了");
+    SpreadsheetApp.getUi().alert(`✅ ${account.name}の週次ダッシュボード更新完了`);
+  } catch (e) {
+    Logger.log(`❌ エラー in manualUpdateDashboards: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
+  }
 }
 
 /**
- * READMEシートを挿入（全アカウント）
+ * READMEシートを挿入（現在のスプレッドシートのアカウントのみ）
  */
 function insertReadmeSheet() {
   try {
-    ACCOUNTS.forEach(account => {
-      insertReadmeSheetForAccount(account);
-    });
-    SpreadsheetApp.getUi().alert("✅ 全アカウントのREADMEシートを挿入しました");
+    const currentSpreadsheetId = SpreadsheetApp.getActive().getId();
+    const account = ACCOUNTS.find(a => a.spreadsheetId === currentSpreadsheetId);
+
+    if (!account) {
+      SpreadsheetApp.getUi().alert("❌ エラー: このスプレッドシートに対応するアカウントが見つかりません");
+      return;
+    }
+
+    insertReadmeSheetForAccount(account);
+    SpreadsheetApp.getUi().alert(`✅ ${account.name}のREADMEシートを挿入しました`);
   } catch (e) {
     Logger.log(`エラー in insertReadmeSheet: ${e.toString()}`);
     SpreadsheetApp.getUi().alert("❌ エラーが発生しました: " + e.toString());
