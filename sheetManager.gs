@@ -132,6 +132,11 @@ function initializeAccountInsightsSheet(sheet) {
     sheet.setColumnWidth(i, 140);
   }
 
+  // Set row heights to default (21 pixels) for all data rows
+  for (let row = 1; row <= 1000; row++) {
+    sheet.setRowHeight(row, 21);
+  }
+
   // Number formatting (データは3行目から)
   sheet.getRange("B3:N1000").setNumberFormat("#,##0");
 
@@ -288,7 +293,7 @@ function updateMediaData(sheet, media, insights) {
 function addHistoryRecord(sheet, date, time) {
   try {
     const historyStartCol = COLUMNS.HISTORY_START + 1; // O列（1-indexed）
-    const historyHeaderRow = 2; // ヘッダー行は2行目に変更
+    const historyHeaderRow = 1; // ヘッダー行は1行目
 
     // 日付フォーマット: "12/25取得"
     const dateParts = date.split("-");
@@ -315,9 +320,9 @@ function addHistoryRecord(sheet, date, time) {
         .setBackground("#D3D3D3");
     }
 
-    // 各行のIMP数を記録（説明行とヘッダー行をスキップするため、i=2から開始）
+    // 各行のIMP数を記録（ヘッダー行をスキップするため、i=1から開始）
     const data = sheet.getDataRange().getValues();
-    for (let i = 2; i < data.length; i++) {
+    for (let i = 1; i < data.length; i++) {
       const impCount = data[i][COLUMNS.IMP_COUNT]; // H列（IMP数）
       if (impCount) {
         sheet.getRange(i + 1, targetCol).setValue(impCount);
@@ -348,7 +353,7 @@ function cleanupOldHistoryColumns(sheet, daysToKeep) {
     const columnsToDelete = [];
 
     for (let col = historyStartCol; col <= lastCol; col++) {
-      const headerValue = sheet.getRange(2, col).getValue(); // ヘッダー行は2行目
+      const headerValue = sheet.getRange(1, col).getValue(); // ヘッダー行は1行目
       if (!headerValue) continue;
 
       // "12/25取得" → Date オブジェクト
@@ -398,13 +403,13 @@ function getSheetData(sheet) {
 function sortSheetByDateDesc(sheet) {
   try {
     const lastRow = sheet.getLastRow();
-    if (lastRow <= 2) return; // データがない場合はスキップ
+    if (lastRow <= 1) return; // データがない場合はスキップ
 
-    // データ範囲を取得（説明行1行目、ヘッダー2行目を除く、3行目から）
-    const dataRange = sheet.getRange(3, 1, lastRow - 2, sheet.getLastColumn());
+    // データ範囲を取得（ヘッダー1行目を除く、2行目から）
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
 
-    // B列（投稿日時）で降順ソート
-    dataRange.sort({column: 2, ascending: false});
+    // 1列（投稿日時）で降順ソート
+    dataRange.sort({column: 1, ascending: false});
 
     Logger.log(`📊 シートを投稿日時で降順ソート完了`);
   } catch (e) {
