@@ -35,11 +35,11 @@ function updateWeeklyDashboard(accountName) {
       Logger.log(`📊 新しい週次シートを作成: ${weekSheetName}`);
     }
 
-    // 先週の期間を計算（Monday-Sunday）
-    // 分析対象は常に「先週」（投稿の7日目データが完全に揃っている週）
+    // 2週間前の期間を計算（Monday-Sunday）
+    // 分析対象は「2週間前」（投稿の7日目データが完全に揃っている週）
     const startOfWeek = new Date(now);
     const daysSinceMonday = (now.getDay() + 6) % 7;
-    startOfWeek.setDate(now.getDate() - daysSinceMonday - 7); // 先週の月曜日
+    startOfWeek.setDate(now.getDate() - daysSinceMonday - 14); // 2週間前の月曜日
     startOfWeek.setHours(0, 0, 0, 0);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -56,13 +56,13 @@ function updateWeeklyDashboard(accountName) {
       return;
     }
 
-    // 先週・先々週のデータを抽出（レポート対象は先週）
-    const thisWeekData = filterByWeek(rows, -1);  // 先週（今回の分析対象）
-    const lastWeekData = filterByWeek(rows, -2); // 先々週（比較用）
+    // 2週間前・3週間前のデータを抽出（レポート対象は2週間前）
+    const thisWeekData = filterByWeek(rows, -2);  // 2週間前（今回の分析対象）
+    const lastWeekData = filterByWeek(rows, -3); // 3週間前（比較用）
 
     Logger.log(`📊 全データ件数: ${rows.length}`);
-    Logger.log(`📅 分析対象週（先週）のデータ件数: ${thisWeekData.length}`);
-    Logger.log(`📅 比較対象週（先々週）のデータ件数: ${lastWeekData.length}`);
+    Logger.log(`📅 分析対象週（2週間前）のデータ件数: ${thisWeekData.length}`);
+    Logger.log(`📅 比較対象週（3週間前）のデータ件数: ${lastWeekData.length}`);
 
     // オーガニック投稿とPR投稿に分ける
     const thisWeekOrganic = thisWeekData.filter(row => !row[COLUMNS.PR]);
@@ -310,10 +310,32 @@ function writePRWarnings(sheet, allRows, account) {
 }
 
 /**
+ * 履歴列から投稿後7日目のIMP数を取得
+ * @param {Array} row - データ行
+ * @return {number} 7日目のIMP数
+ */
+function getDay7Imp(row) {
+  const historyStartCol = COLUMNS.HISTORY_START; // P列（15列目）
+
+  // P列が1日目、Q列が2日目、...、V列が7日目
+  const day7Index = historyStartCol + 6; // 7日目の列インデックス
+
+  if (row[day7Index] !== undefined && row[day7Index] !== "" && row[day7Index] !== null) {
+    const value = parseInt(row[day7Index]);
+    if (!isNaN(value)) {
+      return value;
+    }
+  }
+
+  // 7日目のデータがない場合は現在のIMP数を使用（フォールバック）
+  return row[COLUMNS.IMP_COUNT] || 0;
+}
+
+/**
  * IMP数の合計
  */
 function sumImp(rows) {
-  return rows.reduce((sum, row) => sum + (row[COLUMNS.IMP_COUNT] || 0), 0);
+  return rows.reduce((sum, row) => sum + getDay7Imp(row), 0);
 }
 
 /**
@@ -329,7 +351,7 @@ function avgImp(rows) {
  */
 function medianImp(rows) {
   if (rows.length === 0) return 0;
-  const sorted = rows.map(row => row[COLUMNS.IMP_COUNT] || 0).sort((a, b) => a - b);
+  const sorted = rows.map(row => getDay7Imp(row)).sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 === 0) {
     return (sorted[mid - 1] + sorted[mid]) / 2;

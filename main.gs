@@ -13,8 +13,9 @@ function onOpen() {
     .addItem("アカウントインサイト取得", "manualFetchAccountInsights")
     .addSeparator()
     .addItem("週次ダッシュボード更新", "manualUpdateDashboards")
+    .addItem("週次レポート生成", "manualGenerateWeeklyReports")
     .addSeparator()
-    .addItem("毎日19時の自動実行を開始", "setupDailyTrigger")
+    .addItem("自動実行を開始", "setupTriggers")
     .addItem("自動実行を停止", "removeTriggers")
     .addSeparator()
     .addItem("READMEシートを挿入", "insertReadmeSheet")
@@ -101,8 +102,8 @@ function fetchAccountData(account, date, time) {
     // 投稿日時で降順ソート（新しい投稿が上）
     sortSheetByDateDesc(sheet);
 
-    // 週次ダッシュボード更新
-    updateWeeklyDashboard(account.name);
+    // 週次ダッシュボード更新は水曜日00:00のトリガーで実行
+    // （毎日のデータ取得時には実行しない）
 
     Logger.log(`✅ ${account.name} のデータ取得完了`);
 
@@ -193,32 +194,50 @@ function manualFetchAccountInsights() {
 }
 
 /**
- * 毎日19時の自動実行トリガーをセット（並列実行版）
+ * 自動実行トリガーをセット（毎日のデータ取得 + 毎週水曜日の週次レポート生成）
  */
-function setupDailyTrigger() {
+function setupTriggers() {
   try {
     removeTriggers(); // 既存削除
 
     // NERA: 19:00に実行
     ScriptApp.newTrigger("fetchNERA")
       .timeBased()
-      .atHour(DATA_FETCH_CONFIG.DAILY_TRIGGER_HOUR)
+      .atHour(19)
       .everyDays(1)
       .create();
 
     // KARA子: 19:05に実行（5分後）
     ScriptApp.newTrigger("fetchKARAKO")
       .timeBased()
-      .atHour(DATA_FETCH_CONFIG.DAILY_TRIGGER_HOUR)
+      .atHour(19)
       .nearMinute(5)
       .everyDays(1)
       .create();
 
-    SpreadsheetApp.getUi().alert("✅ 毎日19時の自動実行を開始しました\n・NERA: 19:00\n・KARA子: 19:05");
+    // 毎週水曜日00:00の週次レポート生成トリガー
+    ScriptApp.newTrigger("generateWeeklyReportsAll")
+      .timeBased()
+      .onWeekDay(ScriptApp.WeekDay.WEDNESDAY)
+      .atHour(0)
+      .create();
+
+    SpreadsheetApp.getUi().alert(
+      "✅ 自動実行を開始しました\n" +
+      "・毎日19時: データ取得 (NERA 19:00, KARA子 19:05)\n" +
+      "・毎週水曜日00:00: 週次レポート生成"
+    );
   } catch (e) {
-    Logger.log(`エラー in setupDailyTrigger: ${e.toString()}`);
+    Logger.log(`エラー in setupTriggers: ${e.toString()}`);
     SpreadsheetApp.getUi().alert("❌ エラー: " + e.toString());
   }
+}
+
+/**
+ * 旧関数名との互換性のため残す
+ */
+function setupDailyTrigger() {
+  setupTriggers();
 }
 
 /**
@@ -228,7 +247,10 @@ function removeTriggers() {
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(trigger => {
     const handlerName = trigger.getHandlerFunction();
-    if (handlerName === "fetchAllAccounts" || handlerName === "fetchNERA" || handlerName === "fetchKARAKO") {
+    if (handlerName === "fetchAllAccounts" ||
+        handlerName === "fetchNERA" ||
+        handlerName === "fetchKARAKO" ||
+        handlerName === "generateWeeklyReportsAll") {
       ScriptApp.deleteTrigger(trigger);
     }
   });
@@ -540,5 +562,56 @@ function recordAccountInsights(sheet, account, accessToken, date) {
     Utilities.sleep(DATA_FETCH_CONFIG.API_CALL_DELAY_MS);
   } catch (e) {
     Logger.log(`❌ エラー in recordAccountInsights (${account.name}): ${e.toString()}`);
+  }
+}
+
+/**
+ * 全アカウントの週次レポートを生成（毎週水曜00:00実行）
+ */
+function generateWeeklyReportsAll() {
+  try {
+    Logger.log("========================================");
+    Logger.log("📊 週次レポート生成開始: " + new Date().toLocaleString("ja-JP"));
+    Logger.log("========================================");
+
+    ACCOUNTS.forEach(account => {
+      Logger.log(`\n📈 ${account.name}の週次レポート生成中...`);
+      updateWeeklyDashboard(account.name);
+
+      // API レート制限対策
+      Utilities.sleep(1000);
+    });
+
+    Logger.log("\n========================================");
+    Logger.log("✅ 全アカウントの週次レポート生成完了");
+    Logger.log("========================================");
+
+  } catch (e) {
+    Logger.log(`❌ エラー in generateWeeklyReportsAll: ${e.toString()}`);
+    handleError("generateWeeklyReportsAll", e, { severity: "HIGH" });
+  }
+}
+
+/**
+ * 週次レポート手動生成（メニューから実行）
+ */
+function manualGenerateWeeklyReports() {
+  try {
+    const currentSpreadsheetId = SpreadsheetApp.getActive().getId();
+    const account = ACCOUNTS.find(a => a.spreadsheetId === currentSpreadsheetId);
+
+    if (!account) {
+      SpreadsheetApp.getUi().alert("❌ エラー: このスプレッドシートに対応するアカウントが見つかりません");
+      return;
+    }
+
+    Logger.log(`📈 ${account.name}の週次レポート生成開始`);
+    updateWeeklyDashboard(account.name);
+    Logger.log(`✅ ${account.name}の週次レポート生成完了`);
+
+    SpreadsheetApp.getUi().alert(`✅ ${account.name}の週次レポート生成完了`);
+  } catch (e) {
+    Logger.log(`❌ エラー in manualGenerateWeeklyReports: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
   }
 }

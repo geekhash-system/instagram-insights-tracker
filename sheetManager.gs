@@ -64,8 +64,8 @@ function initializeAccountSheet(sheet) {
   // 1行目の高さを調整
   sheet.setRowHeight(1, 30);
 
-  // キャプション列（E列）のテキスト折り返しを有効化
-  sheet.getRange("E3:E1000").setWrap(true);
+  // キャプション列（E列）のテキスト折り返しと上揃えを設定
+  sheet.getRange("E3:E1000").setWrap(true).setVerticalAlignment("top");
 
   // キャプション列を含む全データ行の高さを21ピクセルに設定（デフォルトより低く）
   for (let row = 3; row <= 1000; row++) {
@@ -154,7 +154,7 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       previousFollowerCount = data[data.length - 1][ACCOUNT_INSIGHTS_COLUMNS.FOLLOWER_COUNT] || 0;
     }
 
-    const currentFollowerCount = accountInfo ? accountInfo.follower_count : 0;
+    const currentFollowerCount = accountInfo ? accountInfo.followers_count : 0;
     const followerChange = currentFollowerCount - previousFollowerCount;
 
     // Format date as YYYY/MM/DD
