@@ -30,7 +30,8 @@ const SHEET_NAMES = {
   KARAKO: "KARA子",
   DASHBOARD_NERA: "週次_NERA",
   DASHBOARD_KARAKO: "週次_KARA子",
-  README: "はじめに（README）"
+  README: "はじめに（README）",
+  ACCOUNT_INSIGHTS: "アカウントインサイト履歴"
 };
 
 // アカウント設定（拡張可能）
@@ -65,7 +66,10 @@ const API_ENDPOINTS = {
   STORIES: (businessId) => `${INSTAGRAM_API_BASE}/${businessId}/stories`,
 
   // アカウントインサイト取得
-  ACCOUNT_INSIGHTS: (businessId) => `${INSTAGRAM_API_BASE}/${businessId}/insights`
+  ACCOUNT_INSIGHTS: (businessId) => `${INSTAGRAM_API_BASE}/${businessId}/insights`,
+
+  // アカウント情報取得（フォロワー数など）
+  ACCOUNT_INFO: (businessId) => `${INSTAGRAM_API_BASE}/${businessId}`
 };
 
 // メディア取得時のフィールド
@@ -94,21 +98,45 @@ const INSIGHT_METRICS = {
   STORIES: "exits,views,reach,taps_forward,taps_back"
 };
 
+// アカウントインサイトメトリクス（日次取得）
+const ACCOUNT_INSIGHT_METRICS = {
+  DAILY: "reach,accounts_engaged,total_interactions,likes,comments,saved,shares,replies,profile_links_taps",
+  PERIOD: "day",
+  METRIC_TYPE: "total_value"
+};
+
 // カラム定数（スプレッドシート列番号）
 const COLUMNS = {
   MEDIA_ID: 0,           // A列
   POST_DATE: 1,          // B列
-  POST_TYPE: 2,          // C列
-  CAPTION: 3,            // D列
-  PERMALINK: 4,          // E列
-  PR: 5,                 // F列
-  IMP_COUNT: 6,          // G列
-  REACH: 7,              // H列
-  LIKES: 8,              // I列
-  COMMENTS: 9,           // J列
-  SAVED: 10,             // K列
-  SHARES: 11,            // L列
-  ENGAGEMENT: 12,        // M列
-  LAST_UPDATE: 13,       // N列
-  HISTORY_START: 14      // O列以降
+  DAY_OF_WEEK: 2,        // C列
+  POST_TYPE: 3,          // D列
+  CAPTION: 4,            // E列
+  PERMALINK: 5,          // F列
+  PR: 6,                 // G列
+  IMP_COUNT: 7,          // H列
+  REACH: 8,              // I列
+  LIKES: 9,              // J列
+  COMMENTS: 10,          // K列
+  SAVED: 11,             // L列
+  SHARES: 12,            // M列
+  ENGAGEMENT: 13,        // N列
+  LAST_UPDATE: 14,       // O列
+  HISTORY_START: 15      // P列以降
+};
+
+// アカウントインサイト履歴シートのカラム定数
+const ACCOUNT_INSIGHTS_COLUMNS = {
+  DATE: 0,                    // A列: 日付
+  FOLLOWER_COUNT: 1,          // B列: フォロワー数
+  FOLLOWER_CHANGE: 2,         // C列: フォロワー増減数
+  REACH: 3,                   // D列: リーチ数
+  ACCOUNTS_ENGAGED: 4,        // E列: エンゲージしたアカウント数
+  TOTAL_INTERACTIONS: 5,      // F列: 総エンゲージメント数
+  LIKES: 6,                   // G列: いいね数
+  COMMENTS: 7,                // H列: コメント数
+  SAVED: 8,                   // I列: 保存数
+  SHARES: 9,                  // J列: シェア数
+  REPLIES: 10,                // K列: 返信数
+  PROFILE_LINKS_TAPS: 11      // L列: プロフィールリンクタップ数
 };

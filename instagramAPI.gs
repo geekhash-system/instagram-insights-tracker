@@ -228,3 +228,78 @@ function fetchStoryInsights(storyId, accessToken) {
     return null;
   }
 }
+
+/**
+ * アカウント情報を取得（フォロワー数）
+ * @param {string} businessId - Instagram Business Account ID
+ * @param {string} accessToken - アクセストークン
+ * @return {Object} アカウント情報
+ */
+function fetchAccountInfo(businessId, accessToken) {
+  try {
+    const url = `${API_ENDPOINTS.ACCOUNT_INFO(businessId)}?fields=follower_count&access_token=${accessToken}`;
+
+    const response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true
+    });
+
+    const statusCode = response.getResponseCode();
+    if (statusCode !== 200) {
+      Logger.log(`❌ アカウント情報取得エラー (${statusCode})`);
+      return null;
+    }
+
+    const result = JSON.parse(response.getContentText());
+    return { follower_count: result.follower_count || 0 };
+  } catch (e) {
+    Logger.log(`エラー in fetchAccountInfo: ${e.toString()}`);
+    return null;
+  }
+}
+
+/**
+ * アカウントインサイトを取得
+ * @param {string} businessId - Instagram Business Account ID
+ * @param {string} accessToken - アクセストークン
+ * @param {string} since - 開始日時（Unixタイムスタンプ）
+ * @param {string} until - 終了日時（Unixタイムスタンプ）
+ * @return {Object} アカウントインサイトデータ
+ */
+function fetchAccountInsights(businessId, accessToken, since, until) {
+  try {
+    const metrics = ACCOUNT_INSIGHT_METRICS.DAILY;
+    const period = ACCOUNT_INSIGHT_METRICS.PERIOD;
+    const metricType = ACCOUNT_INSIGHT_METRICS.METRIC_TYPE;
+
+    const url = `${API_ENDPOINTS.ACCOUNT_INSIGHTS(businessId)}?metric=${metrics}&period=${period}&metric_type=${metricType}&since=${since}&until=${until}&access_token=${accessToken}`;
+
+    const response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true
+    });
+
+    const statusCode = response.getResponseCode();
+    if (statusCode !== 200) {
+      Logger.log(`❌ アカウントインサイト取得エラー (${statusCode})`);
+      return null;
+    }
+
+    const result = JSON.parse(response.getContentText());
+    const insights = {};
+
+    // Parse response - extract total_value from each metric
+    if (result.data) {
+      result.data.forEach(item => {
+        if (item.total_value && item.total_value.value !== undefined) {
+          insights[item.name] = item.total_value.value;
+        }
+      });
+    }
+
+    return insights;
+  } catch (e) {
+    Logger.log(`エラー in fetchAccountInsights: ${e.toString()}`);
+    return null;
+  }
+}

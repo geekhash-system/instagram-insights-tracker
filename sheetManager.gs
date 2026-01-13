@@ -13,12 +13,13 @@ function initializeAccountSheet(sheet) {
 
   sheet.getRange(1, 1).setValue(explanation);
   sheet.getRange(1, 1).setFontWeight("bold").setBackground("#FFF9C4").setFontSize(10);
-  sheet.getRange(1, 1, 1, 15).merge(); // A1からO1までマージ
+  sheet.getRange(1, 1, 1, 16).merge(); // A1からP1までマージ
 
   // ヘッダー設定（2行目に移動）
   const headers = [
     "メディアID",
     "投稿日時",
+    "曜日",
     "投稿タイプ",
     "キャプション",
     "パーマリンク",
@@ -39,34 +40,153 @@ function initializeAccountSheet(sheet) {
   headerRow.setFontWeight("bold");
   headerRow.setBackground("#D3D3D3");
 
-  // F列（PR列）にチェックボックスを設定（3行目から）
-  sheet.getRange("F3:F1000").insertCheckboxes();
+  // G列（PR列）にチェックボックスを設定（3行目から）
+  sheet.getRange("G3:G1000").insertCheckboxes();
 
   // 列幅調整
   sheet.setColumnWidth(1, 150);  // メディアID
   sheet.setColumnWidth(2, 150);  // 投稿日時
-  sheet.setColumnWidth(3, 100);  // 投稿タイプ
-  sheet.setColumnWidth(4, 300);  // キャプション
-  sheet.setColumnWidth(5, 250);  // パーマリンク
-  sheet.setColumnWidth(6, 60);   // PR
-  sheet.setColumnWidth(7, 100);  // IMP数
-  sheet.setColumnWidth(8, 100);  // リーチ数
-  sheet.setColumnWidth(9, 100);  // いいね数
-  sheet.setColumnWidth(10, 100); // コメント数
-  sheet.setColumnWidth(11, 100); // 保存数
-  sheet.setColumnWidth(12, 100); // シェア数
-  sheet.setColumnWidth(13, 120); // エンゲージメント数
-  sheet.setColumnWidth(14, 150); // 最終更新日時
-  sheet.setColumnWidth(15, 80);  // 履歴→
+  sheet.setColumnWidth(3, 50);   // 曜日
+  sheet.setColumnWidth(4, 100);  // 投稿タイプ
+  sheet.setColumnWidth(5, 300);  // キャプション
+  sheet.setColumnWidth(6, 250);  // パーマリンク
+  sheet.setColumnWidth(7, 60);   // PR
+  sheet.setColumnWidth(8, 100);  // IMP数
+  sheet.setColumnWidth(9, 100);  // リーチ数
+  sheet.setColumnWidth(10, 100); // いいね数
+  sheet.setColumnWidth(11, 100); // コメント数
+  sheet.setColumnWidth(12, 100); // 保存数
+  sheet.setColumnWidth(13, 100); // シェア数
+  sheet.setColumnWidth(14, 120); // エンゲージメント数
+  sheet.setColumnWidth(15, 150); // 最終更新日時
+  sheet.setColumnWidth(16, 80);  // 履歴→
 
   // 1行目の高さを調整
   sheet.setRowHeight(1, 30);
 
   // 数値列にカンマ区切りフォーマットを適用（3行目以降、1000行まで）
-  // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
-  sheet.getRange("G3:M1000").setNumberFormat("#,##0");
-  // O列以降の履歴列もカンマ区切り
-  sheet.getRange("O3:Z1000").setNumberFormat("#,##0");
+  // H列: IMP数, I列: リーチ数, J列: いいね数, K列: コメント数, L列: 保存数, M列: シェア数, N列: エンゲージメント数
+  sheet.getRange("H3:N1000").setNumberFormat("#,##0");
+  // P列以降の履歴列もカンマ区切り
+  sheet.getRange("P3:Z1000").setNumberFormat("#,##0");
+}
+
+/**
+ * アカウントインサイト履歴シートを初期化
+ * @param {Sheet} sheet - 対象シート
+ */
+function initializeAccountInsightsSheet(sheet) {
+  const explanation = `このシートはアカウントレベルのインサイトデータを記録しています。毎日19時に自動更新されます。履歴は永久保存されます。`;
+
+  sheet.getRange(1, 1).setValue(explanation);
+  sheet.getRange(1, 1).setFontWeight("bold").setBackground("#E1F5FE").setFontSize(10);
+  sheet.getRange(1, 1, 1, 12).merge();
+
+  const headers = [
+    "日付",
+    "フォロワー数",
+    "フォロワー増減数",
+    "リーチ数",
+    "エンゲージしたアカウント数",
+    "総エンゲージメント数",
+    "いいね数",
+    "コメント数",
+    "保存数",
+    "シェア数",
+    "返信数",
+    "プロフィールリンクタップ数"
+  ];
+
+  const headerRow = sheet.getRange(2, 1, 1, headers.length);
+  headerRow.setValues([headers]);
+  headerRow.setFontWeight("bold");
+  headerRow.setBackground("#B3E5FC");
+
+  // Set column widths
+  sheet.setColumnWidth(1, 120);  // 日付
+  for (let i = 2; i <= 12; i++) {
+    sheet.setColumnWidth(i, 140);
+  }
+
+  sheet.setRowHeight(1, 30);
+
+  // Number formatting
+  sheet.getRange("B3:L1000").setNumberFormat("#,##0");
+
+  // Conditional formatting for follower change (C column)
+  const followerChangeRange = sheet.getRange("C3:C1000");
+  const positiveRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenNumberGreaterThan(0)
+    .setFontColor("#0F9D58")
+    .setRanges([followerChangeRange])
+    .build();
+  const negativeRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenNumberLessThan(0)
+    .setFontColor("#DB4437")
+    .setRanges([followerChangeRange])
+    .build();
+
+  sheet.setConditionalFormatRules([positiveRule, negativeRule]);
+}
+
+/**
+ * アカウントインサイトデータを記録
+ * @param {Sheet} sheet - アカウントインサイトシート
+ * @param {string} date - 日付（YYYY-MM-DD）
+ * @param {Object} accountInfo - アカウント情報（フォロワー数など）
+ * @param {Object} insights - インサイトデータ
+ */
+function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
+  try {
+    const data = sheet.getDataRange().getValues();
+
+    // Get previous day's follower count for change calculation
+    let previousFollowerCount = 0;
+    if (data.length > 2) {
+      previousFollowerCount = data[data.length - 1][ACCOUNT_INSIGHTS_COLUMNS.FOLLOWER_COUNT] || 0;
+    }
+
+    const currentFollowerCount = accountInfo ? accountInfo.follower_count : 0;
+    const followerChange = currentFollowerCount - previousFollowerCount;
+
+    // Format date as YYYY/MM/DD
+    const dateParts = date.split("-");
+    const formattedDate = `${dateParts[0]}/${dateParts[1]}/${dateParts[2]}`;
+
+    const rowData = [
+      formattedDate,
+      currentFollowerCount,
+      followerChange,
+      insights ? (insights.reach || 0) : 0,
+      insights ? (insights.accounts_engaged || 0) : 0,
+      insights ? (insights.total_interactions || 0) : 0,
+      insights ? (insights.likes || 0) : 0,
+      insights ? (insights.comments || 0) : 0,
+      insights ? (insights.saved || 0) : 0,
+      insights ? (insights.shares || 0) : 0,
+      insights ? (insights.replies || 0) : 0,
+      insights ? (insights.profile_links_taps || 0) : 0
+    ];
+
+    // Check if date already exists
+    let existingRow = null;
+    for (let i = 2; i < data.length; i++) {
+      if (data[i][ACCOUNT_INSIGHTS_COLUMNS.DATE] === formattedDate) {
+        existingRow = i + 1;
+        break;
+      }
+    }
+
+    if (existingRow) {
+      sheet.getRange(existingRow, 1, 1, rowData.length).setValues([rowData]);
+      Logger.log(`🔄 アカウントインサイト更新: ${formattedDate}`);
+    } else {
+      sheet.appendRow(rowData);
+      Logger.log(`➕ アカウントインサイト追加: ${formattedDate}`);
+    }
+  } catch (e) {
+    Logger.log(`エラー in addAccountInsightsRecord: ${e.toString()}`);
+  }
 }
 
 /**
@@ -92,6 +212,7 @@ function updateMediaData(sheet, media, insights) {
     // データ作成
     // hinome-backend実装に基づく: リールもフィードも"views"メトリクスを使用
     const timestamp = new Date(media.timestamp);
+    const dayOfWeek = getDayOfWeekJapanese(timestamp);
     const impressions = insights ? (insights.views || 0) : 0;  // viewsを使用
     const reach = insights ? (insights.reach || 0) : 0;
     const engagement = insights ? (insights.total_interactions || 0) : 0;
@@ -99,6 +220,7 @@ function updateMediaData(sheet, media, insights) {
     const rowData = [
       mediaId,
       timestamp,
+      dayOfWeek,
       media.media_product_type || media.media_type,
       media.caption || "",
       media.permalink || "",
@@ -169,7 +291,7 @@ function addHistoryRecord(sheet, date, time) {
     // 各行のIMP数を記録（説明行とヘッダー行をスキップするため、i=2から開始）
     const data = sheet.getDataRange().getValues();
     for (let i = 2; i < data.length; i++) {
-      const impCount = data[i][COLUMNS.IMP_COUNT]; // G列（IMP数）
+      const impCount = data[i][COLUMNS.IMP_COUNT]; // H列（IMP数）
       if (impCount) {
         sheet.getRange(i + 1, targetCol).setValue(impCount);
       }

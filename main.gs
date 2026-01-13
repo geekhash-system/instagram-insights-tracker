@@ -10,6 +10,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu("📊 インサイト追跡ツール")
     .addItem("今すぐデータ取得", "manualFetchAll")
+    .addItem("アカウントインサイト取得", "manualFetchAccountInsights")
     .addSeparator()
     .addItem("週次ダッシュボード更新", "manualUpdateDashboards")
     .addSeparator()
@@ -91,6 +92,12 @@ function fetchAccountData(account, date, time) {
     // 日次履歴を記録
     addHistoryRecord(sheet, date, time);
 
+    // アカウントインサイト履歴を記録
+    const accountInsightsSheet = getOrCreateAccountInsightsSheet(ss);
+    if (accountInsightsSheet) {
+      recordAccountInsights(accountInsightsSheet, account, accessToken, date);
+    }
+
     // 投稿日時で降順ソート（新しい投稿が上）
     sortSheetByDateDesc(sheet);
 
@@ -148,6 +155,40 @@ function fetchKARAKO() {
   } catch (e) {
     Logger.log(`❌ エラー in fetchKARAKO: ${e.toString()}`);
     handleError("fetchKARAKO", e, { severity: "HIGH" });
+  }
+}
+
+/**
+ * アカウントインサイト手動取得（現在のスプレッドシートのアカウントのみ）
+ */
+function manualFetchAccountInsights() {
+  try {
+    const currentSpreadsheetId = SpreadsheetApp.getActive().getId();
+    const account = ACCOUNTS.find(a => a.spreadsheetId === currentSpreadsheetId);
+
+    if (!account) {
+      SpreadsheetApp.getUi().alert("❌ エラー: このスプレッドシートに対応するアカウントが見つかりません");
+      return;
+    }
+
+    Logger.log(`========================================`);
+    Logger.log(`📊 ${account.name} アカウントインサイト取得開始: ${new Date().toLocaleString("ja-JP")}`);
+    Logger.log(`========================================`);
+
+    const { date } = getCurrentDateTime();
+    const accessToken = eval(account.tokenKey);
+    const ss = SpreadsheetApp.getActive();
+    const sheet = getOrCreateAccountInsightsSheet(ss);
+
+    if (sheet) {
+      recordAccountInsights(sheet, account, accessToken, date);
+    }
+
+    Logger.log(`✅ ${account.name} アカウントインサイト取得完了`);
+    SpreadsheetApp.getUi().alert(`✅ ${account.name}のアカウントインサイト取得完了`);
+  } catch (e) {
+    Logger.log(`❌ エラー in manualFetchAccountInsights: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
   }
 }
 
@@ -440,5 +481,58 @@ function insertReadmeSheetForAccount(account) {
     Logger.log(`✅ ${account.name} のREADMEシートを挿入しました`);
   } catch (e) {
     Logger.log(`エラー in insertReadmeSheetForAccount (${account.name}): ${e.toString()}`);
+  }
+}
+
+/**
+ * アカウントインサイトシートを取得または作成
+ * @param {Spreadsheet} ss - スプレッドシートオブジェクト
+ * @return {Sheet} アカウントインサイトシート
+ */
+function getOrCreateAccountInsightsSheet(ss) {
+  try {
+    let sheet = ss.getSheetByName(SHEET_NAMES.ACCOUNT_INSIGHTS);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAMES.ACCOUNT_INSIGHTS);
+      initializeAccountInsightsSheet(sheet);
+      Logger.log(`📊 アカウントインサイトシートを作成しました`);
+    }
+    return sheet;
+  } catch (e) {
+    Logger.log(`エラー in getOrCreateAccountInsightsSheet: ${e.toString()}`);
+    return null;
+  }
+}
+
+/**
+ * アカウントインサイトデータを記録
+ * @param {Sheet} sheet - アカウントインサイトシート
+ * @param {Object} account - アカウント設定
+ * @param {string} accessToken - アクセストークン
+ * @param {string} date - 日付（YYYY-MM-DD）
+ */
+function recordAccountInsights(sheet, account, accessToken, date) {
+  try {
+    Logger.log(`📊 アカウントインサイト取得開始: ${account.name}`);
+
+    // Fetch follower count
+    const accountInfo = fetchAccountInfo(account.businessId, accessToken);
+
+    // Fetch account insights for yesterday (more stable data)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const since = Math.floor(yesterday.getTime() / 1000);
+    const until = Math.floor((yesterday.getTime() + 86400000) / 1000); // +24 hours
+
+    const insights = fetchAccountInsights(account.businessId, accessToken, since, until);
+
+    // Record data
+    addAccountInsightsRecord(sheet, date, accountInfo, insights);
+
+    Logger.log(`✅ アカウントインサイト記録完了: ${account.name}`);
+    Utilities.sleep(DATA_FETCH_CONFIG.API_CALL_DELAY_MS);
+  } catch (e) {
+    Logger.log(`❌ エラー in recordAccountInsights (${account.name}): ${e.toString()}`);
   }
 }

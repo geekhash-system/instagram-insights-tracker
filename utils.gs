@@ -68,3 +68,13 @@ function handleError(functionName, error, context = {}) {
     sendSlackNotification(errorMessage);
   }
 }
+
+/**
+ * 曜日を日本語で取得
+ * @param {Date} date - 日付オブジェクト
+ * @return {string} 曜日（月、火、水、木、金、土、日）
+ */
+function getDayOfWeekJapanese(date) {
+  const days = ["日", "月", "火", "水", "木", "金", "土"];
+  return days[date.getDay()];
+}
