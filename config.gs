@@ -3,9 +3,6 @@
 // ========================================
 // 注：秘密情報は .env.gs に記載（GitHubに公開しない）
 
-// スプレッドシート ID（GitHub Actionsで自動置換される）
-const SPREADSHEET_ID = "{{SPREADSHEET_ID}}";
-
 // Instagram Graph API設定
 // hinome-backendではv18.0とv21.0を使い分けている
 // メディア・インサイト取得: v18.0（安定版）
@@ -14,7 +11,7 @@ const INSTAGRAM_API_BASE = "https://graph.facebook.com/v18.0";
 
 // データ取得設定
 const DATA_FETCH_CONFIG = {
-  MAX_DAYS_BACK: 90,              // 取得対象期間（90日）
+  MAX_DAYS_BACK: 30,              // 取得対象期間（30日）
   POSTS_PER_PAGE: 25,             // 1回のAPIコールで取得される投稿数
   MAX_POSTS_PER_ACCOUNT: 100,     // 1アカウントあたりの最大取得投稿数
   API_CALL_DELAY_MS: 500,         // API呼び出し間の待機時間（ミリ秒）
@@ -40,6 +37,7 @@ const SHEET_NAMES = {
 const ACCOUNTS = [
   {
     name: "NERA",
+    spreadsheetId: "{{NERA_SPREADSHEET_ID}}",  // NERAの専用スプレッドシートID（GitHub Actionsで置換）
     sheetName: SHEET_NAMES.NERA,
     dashboardSheet: SHEET_NAMES.DASHBOARD_NERA,
     businessId: "17841432104009484",
@@ -47,6 +45,7 @@ const ACCOUNTS = [
   },
   {
     name: "KARA子",
+    spreadsheetId: "{{KARAKO_SPREADSHEET_ID}}",  // KARA子の専用スプレッドシートID（GitHub Actionsで置換）
     sheetName: SHEET_NAMES.KARAKO,
     dashboardSheet: SHEET_NAMES.DASHBOARD_KARAKO,
     businessId: "17841443872237114",

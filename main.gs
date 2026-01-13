@@ -58,7 +58,7 @@ function fetchAllAccounts() {
  */
 function fetchAccountData(account, date, time) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = SpreadsheetApp.openById(account.spreadsheetId);
     let sheet = ss.getSheetByName(account.sheetName);
 
     // シートがなければ作成
@@ -212,11 +212,27 @@ function manualUpdateDashboards() {
 }
 
 /**
- * READMEシートを挿入
+ * READMEシートを挿入（全アカウント）
  */
 function insertReadmeSheet() {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    ACCOUNTS.forEach(account => {
+      insertReadmeSheetForAccount(account);
+    });
+    SpreadsheetApp.getUi().alert("✅ 全アカウントのREADMEシートを挿入しました");
+  } catch (e) {
+    Logger.log(`エラー in insertReadmeSheet: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert("❌ エラーが発生しました: " + e.toString());
+  }
+}
+
+/**
+ * 指定アカウントのREADMEシートを挿入
+ * @param {Object} account - アカウント設定
+ */
+function insertReadmeSheetForAccount(account) {
+  try {
+    const ss = SpreadsheetApp.openById(account.spreadsheetId);
 
     // 既存のREADMEシートがあれば削除
     const existingSheet = ss.getSheetByName(SHEET_NAMES.README);
@@ -230,7 +246,7 @@ function insertReadmeSheet() {
     const readmeContent = [
       ["📊 Instagram インサイト追跡ツール"],
       [""],
-      ["このツールは、NERAとKARA子のInstagramインサイトを毎日19時に自動取得し、週次分析を行います。"],
+      [`このツールは、${account.name}のInstagramインサイトを毎日19時に自動取得し、週次分析を行います。`],
       [""],
       ["【使い方】"],
       ["1. メニュー「インサイト追跡ツール」→「毎日19時の自動実行を開始」をクリック"],
@@ -239,7 +255,7 @@ function insertReadmeSheet() {
       [""],
       ["【PR投稿の設定】"],
       ["PR投稿は手動設定です:"],
-      ["1. NERAまたはKARA子シートを開く"],
+      [`1. ${account.name}シートを開く`],
       ["2. PR投稿の行を見つける（企業タイアップ、案件投稿など）"],
       ["3. F列（PR列）のチェックボックスをクリックしてONにする"],
       ["4. 週次ダッシュボード更新を実行すると、PR投稿として集計されます"],
@@ -251,10 +267,8 @@ function insertReadmeSheet() {
       ["- 注意: PR投稿が0件の場合、週次ダッシュボードの「PR投稿」セクションは0と表示されます"],
       [""],
       ["【シート構成】"],
-      ["- NERA: NERAのインサイトデータ（2025年12月以降）"],
-      ["- KARA子: KARA子のインサイトデータ（2025年12月以降）"],
-      ["- 週次_NERA_2026W02: NERAの週次ダッシュボード（週ごとに自動生成、13週間保持）"],
-      ["- 週次_KARA子_2026W02: KARA子の週次ダッシュボード（週ごとに自動生成、13週間保持）"],
+      [`- ${account.name}: ${account.name}のインサイトデータ（直近30日分）`],
+      [`- 週次_${account.name}_2026W02: ${account.name}の週次ダッシュボード（週ごとに自動生成、13週間保持）`],
       [""],
       ["【IMP数について】"],
       ["このツールでは全ての投稿タイプ（リール・フィード）で「views」メトリクスを「IMP数」として使用しています。"],
@@ -264,8 +278,9 @@ function insertReadmeSheet() {
       ["- フィード: 投稿が表示された回数（フィード上で見られた回数）"],
       [""],
       ["【注意事項】"],
-      ["- データは直近90日分が取得されます"],
-      ["- 履歴は90日分保持されます"],
+      ["- データは直近30日分が取得されます"],
+      ["- 履歴は30日分保持されます"],
+      ["- 週の定義: 月曜日始まり（月曜〜日曜が1週間）"],
       [""],
       ["【トラブルシューティング】"],
       ["- データが取得できない場合: Apps Script → 実行数 でログを確認してください"],
@@ -281,9 +296,8 @@ function insertReadmeSheet() {
     readmeSheet.getRange("A1").setFontSize(16).setFontWeight("bold");
     readmeSheet.setColumnWidth(1, 800);
 
-    SpreadsheetApp.getUi().alert("✅ READMEシートを挿入しました");
+    Logger.log(`✅ ${account.name} のREADMEシートを挿入しました`);
   } catch (e) {
-    Logger.log(`エラー in insertReadmeSheet: ${e.toString()}`);
-    SpreadsheetApp.getUi().alert("❌ エラーが発生しました: " + e.toString());
+    Logger.log(`エラー in insertReadmeSheetForAccount (${account.name}): ${e.toString()}`);
   }
 }

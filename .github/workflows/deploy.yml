@@ -32,7 +32,8 @@ jobs:
       - name: Replace placeholders
         run: |
           SCRIPT_ID="${{ secrets.SCRIPT_ID_MAIN }}"
-          SPREADSHEET_ID="${{ secrets.SPREADSHEET_ID_MAIN }}"
+          NERA_SPREADSHEET_ID="${{ secrets.NERA_SPREADSHEET_ID }}"
+          KARAKO_SPREADSHEET_ID="${{ secrets.KARAKO_SPREADSHEET_ID }}"
 
           echo "Deploying to MAIN environment"
 
@@ -41,10 +42,11 @@ jobs:
           echo "Updated .clasp.json with Script ID: $SCRIPT_ID"
           grep "scriptId" .clasp.json
 
-          # Replace placeholder in config.gs
-          sed -i "s/{{SPREADSHEET_ID}}/$SPREADSHEET_ID/" config.gs
-          echo "Updated config.gs with Spreadsheet ID: $SPREADSHEET_ID"
-          grep "SPREADSHEET_ID" config.gs
+          # Replace placeholders in config.gs
+          sed -i "s/{{NERA_SPREADSHEET_ID}}/$NERA_SPREADSHEET_ID/" config.gs
+          sed -i "s/{{KARAKO_SPREADSHEET_ID}}/$KARAKO_SPREADSHEET_ID/" config.gs
+          echo "Updated config.gs with Spreadsheet IDs"
+          grep "spreadsheetId" config.gs
 
       - name: Create .env.gs from secret
         run: |

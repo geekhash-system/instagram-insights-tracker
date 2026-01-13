@@ -8,7 +8,6 @@
  */
 function updateWeeklyDashboard(accountName) {
   try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const account = ACCOUNTS.find(a => a.name === accountName);
 
     if (!account) {
@@ -16,6 +15,7 @@ function updateWeeklyDashboard(accountName) {
       return;
     }
 
+    const ss = SpreadsheetApp.openById(account.spreadsheetId);
     const dataSheet = ss.getSheetByName(account.sheetName);
     if (!dataSheet) {
       Logger.log(`ℹ️ データシートがまだありません: ${accountName}`);
@@ -35,9 +35,10 @@ function updateWeeklyDashboard(accountName) {
       Logger.log(`📊 新しい週次シートを作成: ${weekSheetName}`);
     }
 
-    // 今週の期間を計算
+    // 今週の期間を計算（Monday-Sunday）
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    const daysSinceMonday = (now.getDay() + 6) % 7;
+    startOfWeek.setDate(now.getDate() - daysSinceMonday);
     startOfWeek.setHours(0, 0, 0, 0);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -125,8 +126,22 @@ function updateWeeklyDashboard(accountName) {
  * @param {string} dateRange - 期間（例: 2026/01/05 - 2026/01/11）
  */
 function initializeDashboardSheet(sheet, dateRange) {
-  sheet.getRange("A1").setValue(`週次ダッシュボード（${dateRange}）`).setFontWeight("bold").setFontSize(16);
-  sheet.getRange("A2").setValue("最終更新: ").setFontSize(10);
+  // Row 1: Title
+  sheet.getRange("A1").setValue(`週次ダッシュボード（${dateRange}）`)
+    .setFontWeight("bold")
+    .setFontSize(16);
+
+  // Row 2: Report Generation Date (レポート生成日)
+  const now = new Date();
+  const generationDate = formatDate(now);
+  sheet.getRange("A2").setValue("レポート生成日:").setFontWeight("bold").setFontSize(10);
+  sheet.getRange("B2").setValue(generationDate).setFontSize(10);
+
+  // Row 3: Measurement Period (計測対象期間)
+  sheet.getRange("A3").setValue("計測対象期間:").setFontWeight("bold").setFontSize(10);
+  sheet.getRange("B3").setValue(dateRange).setFontSize(10);
+
+  // Row 4: Blank row for spacing
 }
 
 /**
@@ -135,10 +150,11 @@ function initializeDashboardSheet(sheet, dateRange) {
  * @param {Object} stats - 統計データ
  */
 function writeDashboardStats(sheet, stats) {
-  // 今週と先週の期間を計算
+  // 今週と先週の期間を計算（Monday-Sunday）
   const now = new Date();
   const thisWeekStart = new Date(now);
-  thisWeekStart.setDate(now.getDate() - now.getDay());
+  const daysSinceMonday = (now.getDay() + 6) % 7;
+  thisWeekStart.setDate(now.getDate() - daysSinceMonday);
   thisWeekStart.setHours(0, 0, 0, 0);
   const thisWeekEnd = new Date(thisWeekStart);
   thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
@@ -181,12 +197,10 @@ function writeDashboardStats(sheet, stats) {
     ["今週の中央値IMP", Math.round(stats.thisWeekPRMedianImp)]
   ];
 
-  sheet.getRange(4, 1, data.length, 2).setValues(data);
+  sheet.getRange(5, 1, data.length, 2).setValues(data);
 
   // 数値列にカンマ区切りフォーマットを適用
-  sheet.getRange(4, 2, data.length, 1).setNumberFormat("#,##0");
-
-  sheet.getRange("A2").setValue("最終更新: " + new Date().toLocaleString("ja-JP"));
+  sheet.getRange(5, 2, data.length, 1).setNumberFormat("#,##0");
 }
 
 /**
@@ -199,7 +213,7 @@ function writeTopBottomOrganic(sheet, organicPosts) {
 
   const sorted = organicPosts.sort((a, b) => (b[COLUMNS.IMP_COUNT] || 0) - (a[COLUMNS.IMP_COUNT] || 0));
 
-  const startRow = 30;
+  const startRow = 31;  // Adjusted for new metadata rows
   sheet.getRange(startRow, 1).setValue("【オーガニック投稿 トップ5】").setFontWeight("bold");
   sheet.getRange(startRow + 1, 1, 1, 4).setValues([["投稿日時", "キャプション", "IMP数", "リンク"]]).setFontWeight("bold");
 
@@ -274,7 +288,7 @@ function writePRWarnings(sheet, allRows, account) {
       ]);
 
     // ダッシュボードに書き込み
-    const warningStartRow = 50;
+    const warningStartRow = 51;  // Adjusted for new metadata rows
     sheet.getRange(warningStartRow, 1).setValue("【PR投稿警告リスト】").setFontWeight("bold").setFontSize(14);
     sheet.getRange(warningStartRow + 1, 1, 1, 6).setValues([
       ["投稿日時", "キャプション", "IMP数", "中央値", "最低ライン", "リンク"]
@@ -324,14 +338,16 @@ function medianImp(rows) {
 }
 
 /**
- * 週でフィルタリング
+ * 週でフィルタリング（Monday-Sunday week）
  * @param {Array} rows - データ行
  * @param {number} weekOffset - 0=今週、-1=先週
  */
 function filterByWeek(rows, weekOffset) {
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay() + weekOffset * 7);
+  // Monday-Sunday: Calculate days since Monday
+  const daysSinceMonday = (now.getDay() + 6) % 7;  // Mon=0, Tue=1, ..., Sun=6
+  startOfWeek.setDate(now.getDate() - daysSinceMonday + weekOffset * 7);
   startOfWeek.setHours(0, 0, 0, 0);
 
   const endOfWeek = new Date(startOfWeek);
@@ -344,13 +360,14 @@ function filterByWeek(rows, weekOffset) {
 }
 
 /**
- * 週番号を取得（ISO 8601方式）
+ * 週番号を取得（Monday-Sunday week）
  * @param {Date} date - 日付
  * @return {number} 週番号
  */
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
+  // Monday-Sunday week: Monday=1, Sunday=7
+  const dayNum = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
