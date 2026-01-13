@@ -64,6 +64,14 @@ function initializeAccountSheet(sheet) {
   // 1行目の高さを調整
   sheet.setRowHeight(1, 30);
 
+  // キャプション列（E列）のテキスト折り返しを有効化
+  sheet.getRange("E3:E1000").setWrap(true);
+
+  // キャプション列を含む全データ行の高さを21ピクセルに設定（デフォルトより低く）
+  for (let row = 3; row <= 1000; row++) {
+    sheet.setRowHeight(row, 21);
+  }
+
   // 数値列にカンマ区切りフォーマットを適用（3行目以降、1000行まで）
   // H列: IMP数, I列: リーチ数, J列: いいね数, K列: コメント数, L列: 保存数, M列: シェア数, N列: エンゲージメント数
   sheet.getRange("H3:N1000").setNumberFormat("#,##0");
