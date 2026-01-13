@@ -177,8 +177,7 @@ function addHistoryRecord(sheet, date, time) {
 
     Logger.log(`📝 履歴記録完了: ${dateFormatted}`);
 
-    // 古い履歴の削除（30日以上前）
-    cleanupOldHistoryColumns(sheet, DATA_FETCH_CONFIG.MAX_DAYS_BACK);
+    // 注: 履歴列は削除せず、永久保存されます
 
   } catch (e) {
     Logger.log(`エラー in addHistoryRecord: ${e.toString()}`);
