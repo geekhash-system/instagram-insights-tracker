@@ -98,7 +98,7 @@ const INSIGHT_METRICS = {
 
 // アカウントインサイトメトリクス（日次取得）
 const ACCOUNT_INSIGHT_METRICS = {
-  DAILY: "reach,accounts_engaged,total_interactions,likes,comments,saved,shares,replies,profile_links_taps",
+  DAILY: "reach,accounts_engaged,total_interactions,likes,comments,saves,shares,replies,profile_links_taps",
   PERIOD: "day",
   METRIC_TYPE: "total_value"
 };

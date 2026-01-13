@@ -162,7 +162,7 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       insights ? (insights.total_interactions || 0) : 0,
       insights ? (insights.likes || 0) : 0,
       insights ? (insights.comments || 0) : 0,
-      insights ? (insights.saved || 0) : 0,
+      insights ? (insights.saves || 0) : 0,
       insights ? (insights.shares || 0) : 0,
       insights ? (insights.replies || 0) : 0,
       insights ? (insights.profile_links_taps || 0) : 0
@@ -229,7 +229,7 @@ function updateMediaData(sheet, media, insights) {
       reach,
       media.like_count || 0,
       media.comments_count || 0,
-      insights ? (insights.saved || 0) : 0,
+      insights ? (insights.saves || 0) : 0,
       insights ? (insights.shares || 0) : 0,
       engagement,
       new Date()
