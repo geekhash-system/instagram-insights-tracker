@@ -322,7 +322,7 @@ function insertReadmeSheetForAccount(account) {
     const readmeSheet = ss.insertSheet(SHEET_NAMES.README, 0); // 先頭に挿入
 
     const readmeContent = [
-      ["📊 Instagram インサイト追跡ツール v2.0"],
+      ["📊 Instagram インサイト追跡ツール"],
       [""],
       [`このスプレッドシートは${account.name}専用です。毎日19時に自動でInstagramインサイトを取得します。`],
       [""],
