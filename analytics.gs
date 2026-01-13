@@ -35,10 +35,11 @@ function updateWeeklyDashboard(accountName) {
       Logger.log(`📊 新しい週次シートを作成: ${weekSheetName}`);
     }
 
-    // 今週の期間を計算（Monday-Sunday）
+    // 先週の期間を計算（Monday-Sunday）
+    // 分析対象は常に「先週」（投稿の7日目データが完全に揃っている週）
     const startOfWeek = new Date(now);
     const daysSinceMonday = (now.getDay() + 6) % 7;
-    startOfWeek.setDate(now.getDate() - daysSinceMonday);
+    startOfWeek.setDate(now.getDate() - daysSinceMonday - 7); // 先週の月曜日
     startOfWeek.setHours(0, 0, 0, 0);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -55,13 +56,13 @@ function updateWeeklyDashboard(accountName) {
       return;
     }
 
-    // 今週・先週のデータを抽出
-    const thisWeekData = filterByWeek(rows, 0);  // 今週
-    const lastWeekData = filterByWeek(rows, -1); // 先週
+    // 先週・先々週のデータを抽出（レポート対象は先週）
+    const thisWeekData = filterByWeek(rows, -1);  // 先週（今回の分析対象）
+    const lastWeekData = filterByWeek(rows, -2); // 先々週（比較用）
 
     Logger.log(`📊 全データ件数: ${rows.length}`);
-    Logger.log(`📅 今週のデータ件数: ${thisWeekData.length}`);
-    Logger.log(`📅 先週のデータ件数: ${lastWeekData.length}`);
+    Logger.log(`📅 分析対象週（先週）のデータ件数: ${thisWeekData.length}`);
+    Logger.log(`📅 比較対象週（先々週）のデータ件数: ${lastWeekData.length}`);
 
     // オーガニック投稿とPR投稿に分ける
     const thisWeekOrganic = thisWeekData.filter(row => !row[COLUMNS.PR]);
