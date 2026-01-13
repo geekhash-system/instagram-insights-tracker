@@ -29,18 +29,10 @@ jobs:
           echo "Created .clasprc.json"
           cat ~/.clasprc.json | jq . || echo "JSON validation failed"
 
-      - name: Replace placeholders
+      - name: Replace placeholders in config.gs
         run: |
-          SCRIPT_ID="${{ secrets.SCRIPT_ID_MAIN }}"
           NERA_SPREADSHEET_ID="${{ secrets.NERA_SPREADSHEET_ID }}"
           KARAKO_SPREADSHEET_ID="${{ secrets.KARAKO_SPREADSHEET_ID }}"
-
-          echo "Deploying to MAIN environment"
-
-          # Replace placeholder in .clasp.json
-          sed -i "s/{{SCRIPT_ID}}/$SCRIPT_ID/" .clasp.json
-          echo "Updated .clasp.json with Script ID: $SCRIPT_ID"
-          grep "scriptId" .clasp.json
 
           # Replace placeholders in config.gs
           sed -i "s/{{NERA_SPREADSHEET_ID}}/$NERA_SPREADSHEET_ID/" config.gs
@@ -55,5 +47,19 @@ jobs:
           EOF
           echo "Created .env.gs"
 
-      - name: Push to Google Apps Script
-        run: clasp push
+      - name: Deploy to NERA Apps Script
+        run: |
+          SCRIPT_ID="${{ secrets.SCRIPT_ID_NERA }}"
+          sed -i "s/{{SCRIPT_ID}}/$SCRIPT_ID/" .clasp.json
+          echo "Deploying to NERA (Script ID: $SCRIPT_ID)"
+          clasp push
+          echo "✅ NERA deployment complete"
+
+      - name: Deploy to KARAKO Apps Script
+        run: |
+          SCRIPT_ID="${{ secrets.SCRIPT_ID_KARAKO }}"
+          # Replace the NERA script ID with KARAKO script ID
+          sed -i 's/"scriptId": "[^"]*"/"scriptId": "'$SCRIPT_ID'"/' .clasp.json
+          echo "Deploying to KARAKO (Script ID: $SCRIPT_ID)"
+          clasp push
+          echo "✅ KARAKO deployment complete"
