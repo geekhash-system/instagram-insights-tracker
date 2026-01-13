@@ -237,7 +237,7 @@ function fetchStoryInsights(storyId, accessToken) {
  */
 function fetchAccountInfo(businessId, accessToken) {
   try {
-    const url = `${API_ENDPOINTS.ACCOUNT_INFO(businessId)}?fields=followers_count&access_token=${accessToken}`;
+    const url = `${API_ENDPOINTS.ACCOUNT_INFO(businessId)}?fields=followers_count,follows_count,media_count&access_token=${accessToken}`;
 
     const response = UrlFetchApp.fetch(url, {
       method: 'get',
@@ -251,7 +251,11 @@ function fetchAccountInfo(businessId, accessToken) {
     }
 
     const result = JSON.parse(response.getContentText());
-    return { followers_count: result.followers_count || 0 };
+    return {
+      followers_count: result.followers_count || 0,
+      follows_count: result.follows_count || 0,
+      media_count: result.media_count || 0
+    };
   } catch (e) {
     Logger.log(`エラー in fetchAccountInfo: ${e.toString()}`);
     return null;

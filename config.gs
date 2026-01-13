@@ -128,13 +128,15 @@ const ACCOUNT_INSIGHTS_COLUMNS = {
   DATE: 0,                    // A列: 日付
   FOLLOWER_COUNT: 1,          // B列: フォロワー数
   FOLLOWER_CHANGE: 2,         // C列: フォロワー増減数
-  REACH: 3,                   // D列: リーチ数
-  ACCOUNTS_ENGAGED: 4,        // E列: エンゲージしたアカウント数
-  TOTAL_INTERACTIONS: 5,      // F列: 総エンゲージメント数
-  LIKES: 6,                   // G列: いいね数
-  COMMENTS: 7,                // H列: コメント数
-  SAVED: 8,                   // I列: 保存数
-  SHARES: 9,                  // J列: シェア数
-  REPLIES: 10,                // K列: 返信数
-  PROFILE_LINKS_TAPS: 11      // L列: プロフィールリンクタップ数
+  FOLLOWS_COUNT: 3,           // D列: フォロー数
+  MEDIA_COUNT: 4,             // E列: 投稿数
+  REACH: 5,                   // F列: リーチ数
+  ACCOUNTS_ENGAGED: 6,        // G列: エンゲージしたアカウント数
+  TOTAL_INTERACTIONS: 7,      // H列: 総エンゲージメント数
+  LIKES: 8,                   // I列: いいね数
+  COMMENTS: 9,                // J列: コメント数
+  SAVED: 10,                  // K列: 保存数
+  SHARES: 11,                 // L列: シェア数
+  REPLIES: 12,                // M列: 返信数
+  PROFILE_LINKS_TAPS: 13      // N列: プロフィールリンクタップ数
 };
