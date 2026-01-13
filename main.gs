@@ -780,3 +780,73 @@ function manualGenerateWeeklyReports() {
     SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
   }
 }
+
+/**
+ * 全アカウントのシートを再初期化
+ * 列順序を変更した後に実行（既存データは削除される）
+ * ⚠️ 注意: このアクションは元に戻せません！
+ */
+function reinitializeAllSheets() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.alert(
+      '⚠️ シート再初期化',
+      '全アカウントのシートを再初期化します。\n\n' +
+      '既存のデータは全て削除されます。\n' +
+      'この操作は元に戻せません。\n\n' +
+      '本当に実行しますか？',
+      ui.ButtonSet.YES_NO
+    );
+
+    if (response !== ui.Button.YES) {
+      Logger.log("ℹ️ シート再初期化がキャンセルされました");
+      return;
+    }
+
+    Logger.log("========================================");
+    Logger.log("🔄 シート再初期化開始: " + new Date().toLocaleString("ja-JP"));
+    Logger.log("========================================");
+
+    ACCOUNTS.forEach(account => {
+      Logger.log(`\n📝 ${account.name} のシートを再初期化中...`);
+      const ss = SpreadsheetApp.openById(account.spreadsheetId);
+
+      // アカウントシートを再初期化
+      const accountSheet = ss.getSheetByName(account.sheetName);
+      if (accountSheet) {
+        accountSheet.clear();
+        initializeAccountSheet(accountSheet);
+        Logger.log(`  ✅ ${account.sheetName} を再初期化しました`);
+      } else {
+        Logger.log(`  ⚠️ ${account.sheetName} が見つかりません`);
+      }
+
+      // アカウントインサイト履歴シートを再初期化
+      const insightsSheet = ss.getSheetByName(SHEET_NAMES.ACCOUNT_INSIGHTS);
+      if (insightsSheet) {
+        insightsSheet.clear();
+        initializeAccountInsightsSheet(insightsSheet);
+        Logger.log(`  ✅ ${SHEET_NAMES.ACCOUNT_INSIGHTS} を再初期化しました`);
+      } else {
+        Logger.log(`  ⚠️ ${SHEET_NAMES.ACCOUNT_INSIGHTS} が見つかりません`);
+      }
+
+      // 週次ダッシュボードシートも再初期化
+      const dashboardSheet = ss.getSheetByName(account.dashboardSheet);
+      if (dashboardSheet) {
+        dashboardSheet.clear();
+        Logger.log(`  ✅ ${account.dashboardSheet} をクリアしました`);
+      }
+    });
+
+    Logger.log("\n========================================");
+    Logger.log("✅ 全てのシート再初期化が完了しました");
+    Logger.log("========================================");
+
+    ui.alert('✅ 完了', '全てのシートを再初期化しました。\n\n次回のデータ取得で新しいデータが記録されます。', ui.ButtonSet.OK);
+
+  } catch (e) {
+    Logger.log(`❌ エラー in reinitializeAllSheets: ${e.toString()}`);
+    SpreadsheetApp.getUi().alert(`❌ エラー: ${e.toString()}`);
+  }
+}

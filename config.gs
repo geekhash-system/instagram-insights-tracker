@@ -105,21 +105,21 @@ const ACCOUNT_INSIGHT_METRICS = {
 
 // カラム定数（スプレッドシート列番号）
 const COLUMNS = {
-  MEDIA_ID: 0,           // A列
-  POST_DATE: 1,          // B列
-  DAY_OF_WEEK: 2,        // C列
-  POST_TYPE: 3,          // D列
-  CAPTION: 4,            // E列
-  PERMALINK: 5,          // F列
-  PR: 6,                 // G列
-  IMP_COUNT: 7,          // H列
-  REACH: 8,              // I列
-  LIKES: 9,              // J列
-  COMMENTS: 10,          // K列
-  SAVED: 11,             // L列
-  SHARES: 12,            // M列
-  ENGAGEMENT: 13,        // N列
-  LAST_UPDATE: 14,       // O列
+  POST_DATE: 0,          // A列（旧B列）
+  DAY_OF_WEEK: 1,        // B列（旧C列）
+  POST_TYPE: 2,          // C列（旧D列）
+  CAPTION: 3,            // D列（旧E列）
+  PERMALINK: 4,          // E列（旧F列）
+  PR: 5,                 // F列（旧G列）
+  IMP_COUNT: 6,          // G列（旧H列）
+  REACH: 7,              // H列（旧I列）
+  LIKES: 8,              // I列（旧J列）
+  COMMENTS: 9,           // J列（旧K列）
+  SAVED: 10,             // K列（旧L列）
+  SHARES: 11,            // L列（旧M列）
+  ENGAGEMENT: 12,        // M列（旧N列）
+  LAST_UPDATE: 13,       // N列（旧O列）
+  MEDIA_ID: 14,          // O列（旧A列）← メディアIDを最後に移動
   HISTORY_START: 15      // P列以降
 };
 

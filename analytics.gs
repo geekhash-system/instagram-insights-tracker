@@ -207,7 +207,7 @@ function writeTopBottomOrganic(sheet, organicPosts) {
 
   const sorted = organicPosts.sort((a, b) => (b[COLUMNS.IMP_COUNT] || 0) - (a[COLUMNS.IMP_COUNT] || 0));
 
-  const startRow = 31;  // Adjusted for new metadata rows
+  const startRow = 32;  // +1 for blank row before organic posts section
   sheet.getRange(startRow, 1).setValue("【オーガニック投稿 トップ5】").setFontWeight("bold");
   sheet.getRange(startRow + 1, 1, 1, 4).setValues([["投稿日時", "キャプション", "IMP数", "リンク"]]).setFontWeight("bold");
 
