@@ -61,8 +61,10 @@ function initializeAccountSheet(sheet) {
     .setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP)
     .setVerticalAlignment("top");
 
-  // 全データ行の高さを40ピクセルに強制設定
-  sheet.setRowHeightsForceAt(2, 998, 40);
+  // 全データ行の高さを40ピクセルに設定
+  for (let row = 2; row <= 1000; row++) {
+    sheet.setRowHeight(row, 40);
+  }
 
   // 数値列にカンマ区切りフォーマットを適用（2行目以降、1000行まで）
   // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
