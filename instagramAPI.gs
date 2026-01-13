@@ -293,14 +293,31 @@ function fetchAccountInsights(businessId, accessToken, since, until) {
     const insights = {};
 
     // Parse response - extract total_value from each metric
+    Logger.log(`📊 APIレスポンス（アカウントインサイト）: ${JSON.stringify(result)}`);
+
     if (result.data) {
       result.data.forEach(item => {
+        // 様々なレスポンス形式に対応
+        let value = null;
+
         if (item.total_value && item.total_value.value !== undefined) {
-          insights[item.name] = item.total_value.value;
+          value = item.total_value.value;
+        } else if (item.values && item.values[0] && item.values[0].value !== undefined) {
+          value = item.values[0].value;
+        } else if (item.value !== undefined) {
+          value = item.value;
+        }
+
+        if (value !== null) {
+          insights[item.name] = value;
+          Logger.log(`  ✅ ${item.name}: ${value}`);
+        } else {
+          Logger.log(`  ⚠️ ${item.name}: パース失敗 - ${JSON.stringify(item)}`);
         }
       });
     }
 
+    Logger.log(`📊 パース結果: ${JSON.stringify(insights)}`);
     return insights;
   } catch (e) {
     Logger.log(`エラー in fetchAccountInsights: ${e.toString()}`);

@@ -102,8 +102,8 @@ function updateWeeklyDashboard(accountName) {
       lastWeekPRMedianImp: medianImp(lastWeekPR)
     };
 
-    // ダッシュボードに書き込み
-    writeDashboardStats(dashboardSheet, stats);
+    // ダッシュボードに書き込み（分析対象期間を渡す）
+    writeDashboardStats(dashboardSheet, stats, startOfWeek, endOfWeek);
 
     // オーガニック投稿のトップ/ワースト
     writeTopBottomOrganic(dashboardSheet, thisWeekOrganic);
@@ -148,21 +148,15 @@ function initializeDashboardSheet(sheet, dateRange) {
  * ダッシュボード統計を書き込み
  * @param {Sheet} sheet - ダッシュボードシート
  * @param {Object} stats - 統計データ
+ * @param {Date} thisWeekStart - 計測対象週の開始日（2週間前の月曜日）
+ * @param {Date} thisWeekEnd - 計測対象週の終了日（2週間前の日曜日）
  */
-function writeDashboardStats(sheet, stats) {
-  // 今週と先週の期間を計算（Monday-Sunday）
-  const now = new Date();
-  const thisWeekStart = new Date(now);
-  const daysSinceMonday = (now.getDay() + 6) % 7;
-  thisWeekStart.setDate(now.getDate() - daysSinceMonday);
-  thisWeekStart.setHours(0, 0, 0, 0);
-  const thisWeekEnd = new Date(thisWeekStart);
-  thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
-
+function writeDashboardStats(sheet, stats, thisWeekStart, thisWeekEnd) {
+  // 計測対象週（2週間前）と比較対象週（3週間前）の期間を計算
   const lastWeekStart = new Date(thisWeekStart);
   lastWeekStart.setDate(thisWeekStart.getDate() - 7);
-  const lastWeekEnd = new Date(lastWeekStart);
-  lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
+  const lastWeekEnd = new Date(thisWeekEnd);
+  lastWeekEnd.setDate(thisWeekEnd.getDate() - 7);
 
   const thisWeekRange = `${formatDate(thisWeekStart)} - ${formatDate(thisWeekEnd)}`;
   const lastWeekRange = `${formatDate(lastWeekStart)} - ${formatDate(lastWeekEnd)}`;

@@ -55,11 +55,15 @@ function initializeAccountSheet(sheet) {
   sheet.setColumnWidth(16, 80);  // 履歴→
 
   // キャプション列（E列）のテキスト折り返しと上揃えを設定
-  sheet.getRange("E2:E1000").setWrap(true).setVerticalAlignment("top");
+  // CLIP戦略を使用して、高さ内で切り取る
+  sheet.getRange("E2:E1000")
+    .setWrap(true)
+    .setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP)
+    .setVerticalAlignment("top");
 
-  // 全データ行の高さを21ピクセルに設定（デフォルトより低く）
+  // 全データ行の高さを40ピクセルに固定（コンパクトな表示）
   for (let row = 2; row <= 1000; row++) {
-    sheet.setRowHeight(row, 21);
+    sheet.setRowHeight(row, 40);
   }
 
   // 数値列にカンマ区切りフォーマットを適用（2行目以降、1000行まで）

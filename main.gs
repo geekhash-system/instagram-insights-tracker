@@ -697,12 +697,26 @@ function recordAccountInsights(sheet, account, accessToken, date) {
     // Fetch follower count
     const accountInfo = fetchAccountInfo(account.businessId, accessToken);
 
-    // Fetch account insights for yesterday (more stable data)
-    const yesterday = new Date();
+    // Fetch account insights for yesterday (JST timezone)
+    const now = new Date();
+    const jstOffset = 9 * 60 * 60 * 1000; // UTC+9
+    const jstNow = new Date(now.getTime() + jstOffset);
+
+    // 昨日の0時（JST）
+    const yesterday = new Date(jstNow);
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
-    const since = Math.floor(yesterday.getTime() / 1000);
-    const until = Math.floor((yesterday.getTime() + 86400000) / 1000); // +24 hours
+
+    // 今日の0時（JST）
+    const today = new Date(jstNow);
+    today.setHours(0, 0, 0, 0);
+
+    const since = Math.floor((yesterday.getTime() - jstOffset) / 1000);
+    const until = Math.floor((today.getTime() - jstOffset) / 1000);
+
+    Logger.log(`📅 アカウントインサイト取得期間: ${yesterday.toISOString()} 〜 ${today.toISOString()}`);
+    Logger.log(`   since=${since} (${new Date(since * 1000).toISOString()})`);
+    Logger.log(`   until=${until} (${new Date(until * 1000).toISOString()})`);
 
     const insights = fetchAccountInsights(account.businessId, accessToken, since, until);
 
