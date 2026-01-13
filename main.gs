@@ -354,6 +354,7 @@ function insertReadmeSheetForAccount(account) {
       [""],
       ["⚠️ このスプレッドシートは" + account.name + "専用です"],
       [`   → ${account.name === "NERA" ? "KARA子" : "NERA"}のデータは別のスプレッドシートで管理されています`],
+      [`   → ${account.name === "NERA" ? "KARA子" : "NERA"}スプレッドシート: https://docs.google.com/spreadsheets/d/${account.name === "NERA" ? "1ka2WikKaEz2-lSd2eqk2Hcb29WhWuOOrKI6W_7FFrNE" : "1R5mKOsOUhFbTPwOklG3Pa1G2iP1LN4Ah2XxKT7dlhNA"}/edit`],
       [""],
       ["━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"],
       [""],
