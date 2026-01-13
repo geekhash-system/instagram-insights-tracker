@@ -22,11 +22,11 @@ function updateWeeklyDashboard(accountName) {
       return;
     }
 
-    // 週次ダッシュボードシート名を生成（年+週番号）
+    // 週次ダッシュボードシート名を生成（作成日のmmdd形式）
     const now = new Date();
-    const weekNumber = getWeekNumber(now);
-    const year = now.getFullYear();
-    const weekSheetName = `週次_${accountName}_${year}W${String(weekNumber).padStart(2, '0')}`;
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const weekSheetName = `週次レポート_${month}${day}`;
 
     let dashboardSheet = ss.getSheetByName(weekSheetName);
 
@@ -110,8 +110,7 @@ function updateWeeklyDashboard(accountName) {
     // PR投稿の警告リスト
     writePRWarnings(dashboardSheet, rows, account);
 
-    // 古い週次シートを削除（13週以上前）
-    cleanupOldWeeklySheets(ss, 13);
+    // 注: 週次シートは削除せず、永久保存されます
 
     Logger.log(`✅ 週次ダッシュボード更新完了: ${weekSheetName}`);
 
