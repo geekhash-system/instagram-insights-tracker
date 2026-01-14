@@ -79,6 +79,24 @@ function initializeAccountSheet(sheet) {
  * @param {Sheet} sheet - 対象シート
  */
 function initializeAccountInsightsSheet(sheet) {
+  // 説明行（1行目）
+  const description = [
+    "データ取得日",
+    "その日の値",
+    "前日比",
+    "その日の値",
+    "その日の値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値",
+    "前日（0時～24時）の集計値"
+  ];
+
   const headers = [
     "日付",
     "フォロワー数",
@@ -96,8 +114,15 @@ function initializeAccountInsightsSheet(sheet) {
     "プロフィールリンクタップ数"
   ];
 
-  // ヘッダー行を書き込み（1行目）
-  const headerRow = sheet.getRange(1, 1, 1, headers.length);
+  // 説明行を書き込み（1行目）
+  const descRow = sheet.getRange(1, 1, 1, description.length);
+  descRow.setValues([description]);
+  descRow.setFontSize(9);
+  descRow.setFontColor("#666666");
+  descRow.setBackground("#E3F2FD");
+
+  // ヘッダー行を書き込み（2行目）
+  const headerRow = sheet.getRange(2, 1, 1, headers.length);
   headerRow.setValues([headers]);
   headerRow.setFontWeight("bold");
   headerRow.setBackground("#B3E5FC");
@@ -111,11 +136,11 @@ function initializeAccountInsightsSheet(sheet) {
   // Set row heights to default (21 pixels) for all data rows (高速化版)
   sheet.setRowHeights(1, 1000, 21);
 
-  // Number formatting (データは2行目から)
-  sheet.getRange("B2:N1000").setNumberFormat("#,##0");
+  // Number formatting (データは3行目から)
+  sheet.getRange("B3:N1000").setNumberFormat("#,##0");
 
-  // Conditional formatting for follower change (C column、2行目から)
-  const followerChangeRange = sheet.getRange("C2:C1000");
+  // Conditional formatting for follower change (C column、3行目から)
+  const followerChangeRange = sheet.getRange("C3:C1000");
   const positiveRule = SpreadsheetApp.newConditionalFormatRule()
     .whenNumberGreaterThan(0)
     .setFontColor("#0F9D58")
@@ -142,9 +167,9 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
     const data = sheet.getDataRange().getValues();
 
     // Get previous day's follower count for change calculation
-    // データは2行目から開始（1行目: ヘッダー）
+    // データは3行目から開始（1行目: 説明行、2行目: ヘッダー）
     let previousFollowerCount = 0;
-    if (data.length > 1) {
+    if (data.length > 2) {
       previousFollowerCount = data[data.length - 1][ACCOUNT_INSIGHTS_COLUMNS.FOLLOWER_COUNT] || 0;
     }
 
@@ -174,9 +199,9 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       insights ? (insights.profile_links_taps || 0) : 0
     ];
 
-    // Check if date already exists (データは2行目から: i=1から開始)
+    // Check if date already exists (データは3行目から: i=2から開始)
     let existingRow = null;
-    for (let i = 1; i < data.length; i++) {
+    for (let i = 2; i < data.length; i++) {
       if (data[i][ACCOUNT_INSIGHTS_COLUMNS.DATE] === formattedDate) {
         existingRow = i + 1;
         break;
@@ -188,6 +213,9 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       Logger.log(`🔄 アカウントインサイト更新: ${formattedDate}`);
     } else {
       sheet.appendRow(rowData);
+      const newRow = sheet.getLastRow();
+      // 新規追加した行の高さを21ピクセルに固定
+      sheet.setRowHeight(newRow, 21);
       Logger.log(`➕ アカウントインサイト追加: ${formattedDate}`);
     }
   } catch (e) {
@@ -250,6 +278,9 @@ function updateMediaData(sheet, media, insights) {
     } else {
       // 新規行を追加
       sheet.appendRow(rowData);
+      const newRow = sheet.getLastRow();
+      // 新規追加した行の高さを40ピクセルに固定
+      sheet.setRowHeight(newRow, 40);
       Logger.log(`➕ 新規追加: ${mediaId}`);
     }
 
