@@ -213,9 +213,6 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       Logger.log(`🔄 アカウントインサイト更新: ${formattedDate}`);
     } else {
       sheet.appendRow(rowData);
-      const newRow = sheet.getLastRow();
-      // 新規追加した行の高さを21ピクセルに固定
-      sheet.setRowHeight(newRow, 21);
       Logger.log(`➕ アカウントインサイト追加: ${formattedDate}`);
     }
   } catch (e) {
@@ -278,9 +275,6 @@ function updateMediaData(sheet, media, insights) {
     } else {
       // 新規行を追加
       sheet.appendRow(rowData);
-      const newRow = sheet.getLastRow();
-      // 新規追加した行の高さを40ピクセルに固定
-      sheet.setRowHeight(newRow, 40);
       Logger.log(`➕ 新規追加: ${mediaId}`);
     }
 
