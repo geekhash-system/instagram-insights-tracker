@@ -64,10 +64,8 @@ function initializeAccountSheet(sheet) {
   sheet.getRange("2:1000")
     .setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
 
-  // 全データ行の高さを40ピクセルに設定
-  for (let row = 2; row <= 1000; row++) {
-    sheet.setRowHeight(row, 40);
-  }
+  // 全データ行の高さを40ピクセルに設定（高速化版）
+  sheet.setRowHeights(2, 999, 40);
 
   // 数値列にカンマ区切りフォーマットを適用（2行目以降、1000行まで）
   // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
@@ -110,10 +108,8 @@ function initializeAccountInsightsSheet(sheet) {
     sheet.setColumnWidth(i, 140);
   }
 
-  // Set row heights to default (21 pixels) for all data rows
-  for (let row = 1; row <= 1000; row++) {
-    sheet.setRowHeight(row, 21);
-  }
+  // Set row heights to default (21 pixels) for all data rows (高速化版)
+  sheet.setRowHeights(1, 1000, 21);
 
   // Number formatting (データは2行目から)
   sheet.getRange("B2:N1000").setNumberFormat("#,##0");
