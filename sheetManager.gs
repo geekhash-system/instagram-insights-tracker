@@ -54,12 +54,15 @@ function initializeAccountSheet(sheet) {
   sheet.setColumnWidth(15, 150); // メディアID
   sheet.setColumnWidth(16, 80);  // 履歴→
 
-  // キャプション列（D列に移動）のテキスト折り返しと上揃えを設定
-  // CLIP戦略を使用して、高さ内で切り取る
+  // キャプション列（D列）のテキスト折り返しと上揃えを設定
   sheet.getRange("D:D")
     .setWrap(true)
     .setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP)
     .setVerticalAlignment("top");
+
+  // 全データ範囲にCLIP戦略を適用（行の高さ自動調整を防ぐ）
+  sheet.getRange("2:1000")
+    .setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
 
   // 全データ行の高さを40ピクセルに設定
   for (let row = 2; row <= 1000; row++) {
@@ -95,36 +98,11 @@ function initializeAccountInsightsSheet(sheet) {
     "プロフィールリンクタップ数"
   ];
 
-  const descriptions = [
-    "取得日",
-    "合計数",
-    "前日比",
-    "フォロー中",
-    "合計数",
-    "閲覧UU数",
-    "エンゲージUU数",
-    "エンゲージ合計",
-    "いいね回数",
-    "コメント回数",
-    "保存回数",
-    "シェア回数",
-    "返信回数",
-    "リンクタップ回数"
-  ];
-
   // ヘッダー行を書き込み（1行目）
   const headerRow = sheet.getRange(1, 1, 1, headers.length);
   headerRow.setValues([headers]);
   headerRow.setFontWeight("bold");
   headerRow.setBackground("#B3E5FC");
-
-  // 説明行を書き込み（2行目）
-  const descRow = sheet.getRange(2, 1, 1, descriptions.length);
-  descRow.setValues([descriptions]);
-  descRow.setFontSize(9);
-  descRow.setFontColor("#666666");
-  descRow.setVerticalAlignment("top");
-  descRow.setBackground("#E3F2FD");
 
   // Set column widths
   sheet.setColumnWidth(1, 120);  // 日付
@@ -137,11 +115,11 @@ function initializeAccountInsightsSheet(sheet) {
     sheet.setRowHeight(row, 21);
   }
 
-  // Number formatting (データは3行目から)
-  sheet.getRange("B3:N1000").setNumberFormat("#,##0");
+  // Number formatting (データは2行目から)
+  sheet.getRange("B2:N1000").setNumberFormat("#,##0");
 
-  // Conditional formatting for follower change (C column、3行目から)
-  const followerChangeRange = sheet.getRange("C3:C1000");
+  // Conditional formatting for follower change (C column、2行目から)
+  const followerChangeRange = sheet.getRange("C2:C1000");
   const positiveRule = SpreadsheetApp.newConditionalFormatRule()
     .whenNumberGreaterThan(0)
     .setFontColor("#0F9D58")
@@ -168,9 +146,9 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
     const data = sheet.getDataRange().getValues();
 
     // Get previous day's follower count for change calculation
-    // データは3行目から開始（1行目: ヘッダー、2行目: 説明行）
+    // データは2行目から開始（1行目: ヘッダー）
     let previousFollowerCount = 0;
-    if (data.length > 2) {
+    if (data.length > 1) {
       previousFollowerCount = data[data.length - 1][ACCOUNT_INSIGHTS_COLUMNS.FOLLOWER_COUNT] || 0;
     }
 
@@ -200,9 +178,9 @@ function addAccountInsightsRecord(sheet, date, accountInfo, insights) {
       insights ? (insights.profile_links_taps || 0) : 0
     ];
 
-    // Check if date already exists (データは3行目から: i=2から開始)
+    // Check if date already exists (データは2行目から: i=1から開始)
     let existingRow = null;
-    for (let i = 2; i < data.length; i++) {
+    for (let i = 1; i < data.length; i++) {
       if (data[i][ACCOUNT_INSIGHTS_COLUMNS.DATE] === formattedDate) {
         existingRow = i + 1;
         break;
@@ -405,8 +383,10 @@ function sortSheetByDateDesc(sheet) {
     const lastRow = sheet.getLastRow();
     if (lastRow <= 1) return; // データがない場合はスキップ
 
-    // データ範囲を取得（ヘッダー1行目を除く、2行目から）
-    const dataRange = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
+    // ソート対象をA～O列（メディアIDまで）に制限
+    // 履歴列（P列以降）はソート不要で、含めるとタイムアウトの原因になる
+    const sortColumns = COLUMNS.MEDIA_ID + 1; // 15列（A～O）
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, sortColumns);
 
     // 1列（投稿日時）で降順ソート
     dataRange.sort({column: 1, ascending: false});
