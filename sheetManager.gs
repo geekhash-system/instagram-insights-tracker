@@ -381,21 +381,6 @@ function cleanupOldHistoryColumns(sheet, daysToKeep) {
 }
 
 /**
- * シートのデータを全て取得
- * @param {Sheet} sheet - 対象シート
- * @return {Array} データ配列（ヘッダー除く）
- */
-function getSheetData(sheet) {
-  try {
-    const data = sheet.getDataRange().getValues();
-    return data.slice(1); // ヘッダー除く
-  } catch (e) {
-    Logger.log(`エラー in getSheetData: ${e.toString()}`);
-    return [];
-  }
-}
-
-/**
  * シートを投稿日時で降順ソート（新しい投稿が上）
  * @param {Sheet} sheet - 対象シート
  */

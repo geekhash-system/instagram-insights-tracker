@@ -49,12 +49,15 @@ function updateWeeklyDashboard(accountName) {
 
     initializeDashboardSheet(dashboardSheet, dateRange);
 
-    // データを取得
-    const rows = getSheetData(dataSheet);
-    if (rows.length === 0) {
+    // データとヘッダーを取得
+    const allData = dataSheet.getDataRange().getValues();
+    if (allData.length <= 1) {
       Logger.log(`ℹ️ データがまだありません: ${accountName}`);
       return;
     }
+
+    const headers = allData[0];  // 1行目（ヘッダー）
+    const rows = allData.slice(1); // 2行目以降（データ）
 
     // 2週間前・3週間前のデータを抽出（レポート対象は2週間前）
     const thisWeekData = filterByWeek(rows, -2);  // 2週間前（今回の分析対象）
@@ -70,36 +73,36 @@ function updateWeeklyDashboard(accountName) {
     const thisWeekPR = thisWeekData.filter(row => row[COLUMNS.PR] === true);
     const lastWeekPR = lastWeekData.filter(row => row[COLUMNS.PR] === true);
 
-    // 統計計算
+    // 統計計算（headers を渡す）
     const stats = {
       thisWeekPostCount: thisWeekData.length,
       lastWeekPostCount: lastWeekData.length,
-      thisWeekTotalImp: sumImp(thisWeekData),
-      lastWeekTotalImp: sumImp(lastWeekData),
-      thisWeekAvgImp: avgImp(thisWeekData),
-      lastWeekAvgImp: avgImp(lastWeekData),
-      thisWeekMedianImp: medianImp(thisWeekData),
-      lastWeekMedianImp: medianImp(lastWeekData),
+      thisWeekTotalImp: sumImp(thisWeekData, headers),
+      lastWeekTotalImp: sumImp(lastWeekData, headers),
+      thisWeekAvgImp: avgImp(thisWeekData, headers),
+      lastWeekAvgImp: avgImp(lastWeekData, headers),
+      thisWeekMedianImp: medianImp(thisWeekData, headers),
+      lastWeekMedianImp: medianImp(lastWeekData, headers),
 
       // オーガニック
       thisWeekOrganicPostCount: thisWeekOrganic.length,
       lastWeekOrganicPostCount: lastWeekOrganic.length,
-      thisWeekOrganicTotalImp: sumImp(thisWeekOrganic),
-      lastWeekOrganicTotalImp: sumImp(lastWeekOrganic),
-      thisWeekOrganicAvgImp: avgImp(thisWeekOrganic),
-      lastWeekOrganicAvgImp: avgImp(lastWeekOrganic),
-      thisWeekOrganicMedianImp: medianImp(thisWeekOrganic),
-      lastWeekOrganicMedianImp: medianImp(lastWeekOrganic),
+      thisWeekOrganicTotalImp: sumImp(thisWeekOrganic, headers),
+      lastWeekOrganicTotalImp: sumImp(lastWeekOrganic, headers),
+      thisWeekOrganicAvgImp: avgImp(thisWeekOrganic, headers),
+      lastWeekOrganicAvgImp: avgImp(lastWeekOrganic, headers),
+      thisWeekOrganicMedianImp: medianImp(thisWeekOrganic, headers),
+      lastWeekOrganicMedianImp: medianImp(lastWeekOrganic, headers),
 
       // PR
       thisWeekPRPostCount: thisWeekPR.length,
       lastWeekPRPostCount: lastWeekPR.length,
-      thisWeekPRTotalImp: sumImp(thisWeekPR),
-      lastWeekPRTotalImp: sumImp(lastWeekPR),
-      thisWeekPRAvgImp: avgImp(thisWeekPR),
-      lastWeekPRAvgImp: avgImp(lastWeekPR),
-      thisWeekPRMedianImp: medianImp(thisWeekPR),
-      lastWeekPRMedianImp: medianImp(lastWeekPR)
+      thisWeekPRTotalImp: sumImp(thisWeekPR, headers),
+      lastWeekPRTotalImp: sumImp(lastWeekPR, headers),
+      thisWeekPRAvgImp: avgImp(thisWeekPR, headers),
+      lastWeekPRAvgImp: avgImp(lastWeekPR, headers),
+      thisWeekPRMedianImp: medianImp(thisWeekPR, headers),
+      lastWeekPRMedianImp: medianImp(lastWeekPR, headers)
     };
 
     // ダッシュボードに書き込み（分析対象期間を渡す）
@@ -108,8 +111,8 @@ function updateWeeklyDashboard(accountName) {
     // オーガニック投稿のトップ/ワースト
     writeTopBottomOrganic(dashboardSheet, thisWeekOrganic);
 
-    // PR投稿の警告リスト
-    writePRWarnings(dashboardSheet, rows, account);
+    // PR投稿の警告リスト（headers を渡す）
+    writePRWarnings(dashboardSheet, rows, headers, account);
 
     // 注: 週次シートは削除せず、永久保存されます
 
@@ -168,15 +171,15 @@ function writeDashboardStats(sheet, stats, thisWeekStart, thisWeekEnd) {
     ["計測対象の総IMP数", stats.thisWeekTotalImp],
     ["比較対象の総IMP数", stats.lastWeekTotalImp],
     ["IMP差分", stats.thisWeekTotalImp - stats.lastWeekTotalImp],
-    ["IMP差分（%）", stats.lastWeekTotalImp > 0 ? ((stats.thisWeekTotalImp - stats.lastWeekTotalImp) / stats.lastWeekTotalImp * 100).toFixed(1) + "%" : "-"],
+    ["IMP差分（%）", stats.lastWeekTotalImp > 0 ? (stats.thisWeekTotalImp - stats.lastWeekTotalImp) / stats.lastWeekTotalImp : 0],
     ["計測対象の平均IMP", Math.round(stats.thisWeekAvgImp)],
     ["比較対象の平均IMP", Math.round(stats.lastWeekAvgImp)],
     ["平均IMP差分", Math.round(stats.thisWeekAvgImp - stats.lastWeekAvgImp)],
-    ["平均IMP差分（%）", stats.lastWeekAvgImp > 0 ? ((stats.thisWeekAvgImp - stats.lastWeekAvgImp) / stats.lastWeekAvgImp * 100).toFixed(1) + "%" : "-"],
+    ["平均IMP差分（%）", stats.lastWeekAvgImp > 0 ? (stats.thisWeekAvgImp - stats.lastWeekAvgImp) / stats.lastWeekAvgImp : 0],
     ["計測対象の中央値IMP", Math.round(stats.thisWeekMedianImp)],
     ["比較対象の中央値IMP", Math.round(stats.lastWeekMedianImp)],
     ["中央値IMP差分", Math.round(stats.thisWeekMedianImp - stats.lastWeekMedianImp)],
-    ["中央値IMP差分（%）", stats.lastWeekMedianImp > 0 ? ((stats.thisWeekMedianImp - stats.lastWeekMedianImp) / stats.lastWeekMedianImp * 100).toFixed(1) + "%" : "-"],
+    ["中央値IMP差分（%）", stats.lastWeekMedianImp > 0 ? (stats.thisWeekMedianImp - stats.lastWeekMedianImp) / stats.lastWeekMedianImp : 0],
     ["", ""],
     ["【オーガニック投稿】", ""],
     ["計測対象期間の投稿数", stats.thisWeekOrganicPostCount],
@@ -193,8 +196,31 @@ function writeDashboardStats(sheet, stats, thisWeekStart, thisWeekEnd) {
 
   sheet.getRange(5, 1, data.length, 2).setValues(data);
 
-  // 数値列にカンマ区切りフォーマットを適用
-  sheet.getRange(5, 2, data.length, 1).setNumberFormat("#,##0");
+  // 数値列にカンマ区切りフォーマットを適用（パーセンテージ行を除く）
+  // 行6, 10, 14はパーセンテージなので別途フォーマット
+  const numberRows = [
+    [5, 2, 1, 1],   // 行5: 投稿数（計測対象）
+    [5, 3, 1, 1],   // 行6: 投稿数（比較対象）
+    [5, 4, 3, 1],   // 行7-9: 総IMP、比較総IMP、IMP差分
+    [5, 8, 3, 1],   // 行11-13: 平均IMP、比較平均IMP、平均IMP差分
+    [5, 12, 3, 1],  // 行15-17: 中央値IMP、比較中央値IMP、中央値IMP差分
+    [5, 17, 5, 1],  // 行19-23: オーガニック投稿の数値
+    [5, 23, 5, 1]   // 行25-29: PR投稿の数値
+  ];
+
+  // カンマ区切りフォーマットを適用（パーセンテージ以外）
+  sheet.getRange(6, 2, 1, 1).setNumberFormat("#,##0");   // 行6: 計測対象投稿数
+  sheet.getRange(7, 2, 1, 1).setNumberFormat("#,##0");   // 行7: 比較対象投稿数
+  sheet.getRange(8, 2, 3, 1).setNumberFormat("#,##0");   // 行8-10: 総IMP、比較総IMP、IMP差分
+  sheet.getRange(12, 2, 3, 1).setNumberFormat("#,##0");  // 行12-14: 平均IMP、比較平均IMP、平均IMP差分
+  sheet.getRange(16, 2, 3, 1).setNumberFormat("#,##0");  // 行16-18: 中央値IMP、比較中央値IMP、中央値IMP差分
+  sheet.getRange(22, 2, 4, 1).setNumberFormat("#,##0");  // 行22-25: オーガニック投稿の数値
+  sheet.getRange(28, 2, 4, 1).setNumberFormat("#,##0");  // 行28-31: PR投稿の数値
+
+  // パーセンテージ行にパーセント書式を適用
+  sheet.getRange(11, 2, 1, 1).setNumberFormat("0.0%");   // 行11: IMP差分（%）
+  sheet.getRange(15, 2, 1, 1).setNumberFormat("0.0%");   // 行15: 平均IMP差分（%）
+  sheet.getRange(19, 2, 1, 1).setNumberFormat("0.0%");   // 行19: 中央値IMP差分（%）
 }
 
 /**
@@ -247,9 +273,10 @@ function writeTopBottomOrganic(sheet, organicPosts) {
  * PR投稿の警告リストを作成
  * @param {Sheet} sheet - ダッシュボードシート
  * @param {Array} allRows - 全データ行
+ * @param {Array} headers - ヘッダー行
  * @param {Object} account - アカウント設定
  */
-function writePRWarnings(sheet, allRows, account) {
+function writePRWarnings(sheet, allRows, headers, account) {
   try {
     // PR投稿のみ抽出（新しい順）
     const prPosts = allRows
@@ -261,9 +288,9 @@ function writePRWarnings(sheet, allRows, account) {
       return;
     }
 
-    // 過去10投稿の中央値を計算
+    // 過去10投稿の中央値を計算（headers を渡す）
     const last10Posts = prPosts.slice(0, DASHBOARD_CONFIG.PR_MEDIAN_POSTS_COUNT);
-    const median = medianImp(last10Posts);
+    const median = medianImp(last10Posts, headers);
     const threshold = median * DASHBOARD_CONFIG.PR_WARNING_THRESHOLD;
 
     Logger.log(`📊 PR投稿中央値: ${median}, 最低ライン: ${threshold}`);
@@ -271,11 +298,11 @@ function writePRWarnings(sheet, allRows, account) {
     // 警告対象の投稿を抽出
     const warnings = prPosts
       .slice(0, 20)
-      .filter(row => (row[COLUMNS.IMP_COUNT] || 0) < threshold)
+      .filter(row => getDay7Imp(row, headers) < threshold)
       .map(row => [
         row[COLUMNS.POST_DATE],
         (row[COLUMNS.CAPTION] || "").substring(0, 50),
-        row[COLUMNS.IMP_COUNT],
+        getDay7Imp(row, headers),
         Math.round(median),
         Math.round(threshold),
         row[COLUMNS.PERMALINK]
@@ -305,19 +332,37 @@ function writePRWarnings(sheet, allRows, account) {
 
 /**
  * 履歴列から投稿後7日目のIMP数を取得
- * @param {Array} row - データ行
+ * @param {Array} row - データ行（0-indexed）
+ * @param {Array} headers - ヘッダー行（0-indexed）
  * @return {number} 7日目のIMP数
  */
-function getDay7Imp(row) {
-  const historyStartCol = COLUMNS.HISTORY_START; // P列（15列目）
+function getDay7Imp(row, headers) {
+  const postDate = new Date(row[COLUMNS.POST_DATE]);
+  if (!postDate || isNaN(postDate.getTime())) {
+    return row[COLUMNS.IMP_COUNT] || 0;
+  }
 
-  // P列が1日目、Q列が2日目、...、V列が7日目
-  const day7Index = historyStartCol + 6; // 7日目の列インデックス
+  // 投稿日から7日後の日付を計算
+  const day7Date = new Date(postDate);
+  day7Date.setDate(postDate.getDate() + 7);
 
-  if (row[day7Index] !== undefined && row[day7Index] !== "" && row[day7Index] !== null) {
-    const value = parseInt(row[day7Index]);
-    if (!isNaN(value)) {
-      return value;
+  // "MM/DD取得"フォーマットに変換
+  const month = String(day7Date.getMonth() + 1).padStart(2, '0');
+  const day = String(day7Date.getDate()).padStart(2, '0');
+  const targetHeader = `${month}/${day}取得`;
+
+  // ヘッダー行で該当する列を探す
+  const historyStartCol = COLUMNS.HISTORY_START;
+  for (let i = historyStartCol; i < headers.length; i++) {
+    if (headers[i] && headers[i].toString() === targetHeader) {
+      const value = row[i];
+      if (value !== undefined && value !== "" && value !== null) {
+        const parsed = parseInt(value);
+        if (!isNaN(parsed)) {
+          return parsed;
+        }
+      }
+      break; // 列は見つかったがデータがない
     }
   }
 
@@ -327,25 +372,31 @@ function getDay7Imp(row) {
 
 /**
  * IMP数の合計
+ * @param {Array} rows - データ行配列
+ * @param {Array} headers - ヘッダー行
  */
-function sumImp(rows) {
-  return rows.reduce((sum, row) => sum + getDay7Imp(row), 0);
+function sumImp(rows, headers) {
+  return rows.reduce((sum, row) => sum + getDay7Imp(row, headers), 0);
 }
 
 /**
  * IMP数の平均
+ * @param {Array} rows - データ行配列
+ * @param {Array} headers - ヘッダー行
  */
-function avgImp(rows) {
+function avgImp(rows, headers) {
   if (rows.length === 0) return 0;
-  return sumImp(rows) / rows.length;
+  return sumImp(rows, headers) / rows.length;
 }
 
 /**
  * IMP数の中央値
+ * @param {Array} rows - データ行配列
+ * @param {Array} headers - ヘッダー行
  */
-function medianImp(rows) {
+function medianImp(rows, headers) {
   if (rows.length === 0) return 0;
-  const sorted = rows.map(row => getDay7Imp(row)).sort((a, b) => a - b);
+  const sorted = rows.map(row => getDay7Imp(row, headers)).sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 === 0) {
     return (sorted[mid - 1] + sorted[mid]) / 2;
