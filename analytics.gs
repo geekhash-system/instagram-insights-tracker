@@ -144,6 +144,9 @@ function initializeDashboardSheet(sheet, dateRange) {
   sheet.getRange("A3").setValue("計測対象期間:").setFontWeight("bold").setFontSize(10);
   sheet.getRange("B3").setValue(dateRange).setFontSize(10);
 
+  // 列幅を設定
+  sheet.setColumnWidth(1, 310);  // A列: 310px
+
   // Row 4: Blank row for spacing
 }
 
