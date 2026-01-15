@@ -120,7 +120,8 @@ const COLUMNS = {
   ENGAGEMENT: 12,        // M列（旧N列）
   LAST_UPDATE: 13,       // N列（旧O列）
   MEDIA_ID: 14,          // O列（旧A列）← メディアIDを最後に移動
-  HISTORY_START: 15      // P列以降
+  HISTORY_HEADER: 15,    // P列: 履歴→
+  HISTORY_START: 16      // Q列以降
 };
 
 // アカウントインサイト履歴シートのカラム定数

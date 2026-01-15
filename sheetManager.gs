@@ -70,8 +70,8 @@ function initializeAccountSheet(sheet) {
   // 数値列にカンマ区切りフォーマットを適用（2行目以降、1000行まで）
   // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
   sheet.getRange("G2:M1000").setNumberFormat("#,##0");
-  // P列以降の履歴列もカンマ区切り
-  sheet.getRange("P2:Z1000").setNumberFormat("#,##0");
+  // Q列以降の履歴列もカンマ区切り
+  sheet.getRange("Q2:Z1000").setNumberFormat("#,##0");
 }
 
 /**
@@ -291,7 +291,7 @@ function updateMediaData(sheet, media, insights) {
  */
 function addHistoryRecord(sheet, date, time) {
   try {
-    const historyStartCol = COLUMNS.HISTORY_START + 1; // O列（1-indexed）
+    const historyStartCol = COLUMNS.HISTORY_START + 1; // Q列（1-indexed）
     const historyHeaderRow = 1; // ヘッダー行は1行目
 
     // 日付フォーマット: "12/25取得"
@@ -389,9 +389,9 @@ function sortSheetByDateDesc(sheet) {
     const lastRow = sheet.getLastRow();
     if (lastRow <= 1) return; // データがない場合はスキップ
 
-    // ソート対象をA～O列（メディアIDまで）に制限
-    // 履歴列（P列以降）はソート不要で、含めるとタイムアウトの原因になる
-    const sortColumns = COLUMNS.MEDIA_ID + 1; // 15列（A～O）
+    // ソート対象をA～P列（履歴→まで）に制限
+    // 履歴列（Q列以降）はソート不要で、含めるとタイムアウトの原因になる
+    const sortColumns = COLUMNS.HISTORY_HEADER + 1; // 16列（A～P）
     const dataRange = sheet.getRange(2, 1, lastRow - 1, sortColumns);
 
     // 1列（投稿日時）で降順ソート
