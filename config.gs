@@ -112,16 +112,17 @@ const COLUMNS = {
   PERMALINK: 4,          // E列（旧F列）
   PR: 5,                 // F列（旧G列）
   IMP_COUNT: 6,          // G列（旧H列）
-  REACH: 7,              // H列（旧I列）
-  LIKES: 8,              // I列（旧J列）
-  COMMENTS: 9,           // J列（旧K列）
-  SAVED: 10,             // K列（旧L列）
-  SHARES: 11,            // L列（旧M列）
-  ENGAGEMENT: 12,        // M列（旧N列）
-  LAST_UPDATE: 13,       // N列（旧O列）
-  MEDIA_ID: 14,          // O列（旧A列）← メディアIDを最後に移動
-  HISTORY_HEADER: 15,    // P列: 履歴→
-  HISTORY_START: 16      // Q列以降
+  IMP_COUNT_7DAY: 7,     // H列: IMP数（7日目）
+  REACH: 8,              // I列（旧H列→旧I列）
+  LIKES: 9,              // J列（旧I列→旧J列）
+  COMMENTS: 10,          // K列（旧J列→旧K列）
+  SAVED: 11,             // L列（旧K列→旧L列）
+  SHARES: 12,            // M列（旧L列→旧M列）
+  ENGAGEMENT: 13,        // N列（旧M列→旧N列）
+  LAST_UPDATE: 14,       // O列（旧N列→旧O列）
+  MEDIA_ID: 15,          // P列（旧O列→旧A列）← メディアIDを最後に移動
+  HISTORY_HEADER: 16,    // Q列: 履歴→
+  HISTORY_START: 17      // R列以降
 };
 
 // アカウントインサイト履歴シートのカラム定数

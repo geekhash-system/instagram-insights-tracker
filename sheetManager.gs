@@ -17,6 +17,7 @@ function initializeAccountSheet(sheet) {
     "パーマリンク",
     "PR",
     "IMP数",
+    "IMP数（7日目）",
     "リーチ数",
     "いいね数",
     "コメント数",
@@ -44,15 +45,16 @@ function initializeAccountSheet(sheet) {
   sheet.setColumnWidth(5, 250);  // パーマリンク
   sheet.setColumnWidth(6, 60);   // PR
   sheet.setColumnWidth(7, 100);  // IMP数
-  sheet.setColumnWidth(8, 100);  // リーチ数
-  sheet.setColumnWidth(9, 100);  // いいね数
-  sheet.setColumnWidth(10, 100); // コメント数
-  sheet.setColumnWidth(11, 100); // 保存数
-  sheet.setColumnWidth(12, 100); // シェア数
-  sheet.setColumnWidth(13, 120); // エンゲージメント数
-  sheet.setColumnWidth(14, 150); // 最終更新日時
-  sheet.setColumnWidth(15, 150); // メディアID
-  sheet.setColumnWidth(16, 80);  // 履歴→
+  sheet.setColumnWidth(8, 120);  // IMP数（7日目）
+  sheet.setColumnWidth(9, 100);  // リーチ数
+  sheet.setColumnWidth(10, 100); // いいね数
+  sheet.setColumnWidth(11, 100); // コメント数
+  sheet.setColumnWidth(12, 100); // 保存数
+  sheet.setColumnWidth(13, 100); // シェア数
+  sheet.setColumnWidth(14, 120); // エンゲージメント数
+  sheet.setColumnWidth(15, 150); // 最終更新日時
+  sheet.setColumnWidth(16, 150); // メディアID
+  sheet.setColumnWidth(17, 80);  // 履歴→
 
   // キャプション列（D列）のテキスト折り返しと上揃えを設定
   sheet.getRange("D:D")
@@ -68,10 +70,10 @@ function initializeAccountSheet(sheet) {
   sheet.setRowHeights(2, 999, 40);
 
   // 数値列にカンマ区切りフォーマットを適用（2行目以降、1000行まで）
-  // G列: IMP数, H列: リーチ数, I列: いいね数, J列: コメント数, K列: 保存数, L列: シェア数, M列: エンゲージメント数
-  sheet.getRange("G2:M1000").setNumberFormat("#,##0");
-  // Q列以降の履歴列もカンマ区切り
-  sheet.getRange("Q2:Z1000").setNumberFormat("#,##0");
+  // G列: IMP数, H列: IMP数（7日目）, I列: リーチ数, J列: いいね数, K列: コメント数, L列: 保存数, M列: シェア数, N列: エンゲージメント数
+  sheet.getRange("G2:N1000").setNumberFormat("#,##0");
+  // R列以降の履歴列もカンマ区切り
+  sheet.getRange("R2:Z1000").setNumberFormat("#,##0");
 }
 
 /**
@@ -321,16 +323,33 @@ function addHistoryRecord(sheet, date, time) {
 
     // 各行のIMP数を記録（ヘッダー行をスキップするため、i=1から開始）
     const data = sheet.getDataRange().getValues();
+    const currentDate = new Date(date);
+
     for (let i = 1; i < data.length; i++) {
-      const impCount = data[i][COLUMNS.IMP_COUNT]; // H列（IMP数）
+      const impCount = data[i][COLUMNS.IMP_COUNT]; // G列（IMP数）
       if (impCount) {
         sheet.getRange(i + 1, targetCol).setValue(impCount);
+      }
+
+      // 7日目のIMP数を更新（投稿日から7日経過した投稿のみ）
+      const postDateStr = data[i][COLUMNS.POST_DATE];
+      if (postDateStr) {
+        const postDate = new Date(postDateStr);
+        if (!isNaN(postDate.getTime())) {
+          // 投稿日から今日までの日数を計算
+          const daysSincePost = Math.floor((currentDate - postDate) / (1000 * 60 * 60 * 24));
+
+          // ちょうど7日経過していて、まだH列に値がない場合
+          if (daysSincePost === 7 && !data[i][COLUMNS.IMP_COUNT_7DAY]) {
+            if (impCount && impCount > 0) {
+              sheet.getRange(i + 1, COLUMNS.IMP_COUNT_7DAY + 1).setValue(impCount);
+            }
+          }
+        }
       }
     }
 
     Logger.log(`📝 履歴記録完了: ${dateFormatted}`);
-
-    // 注: 履歴列は削除せず、永久保存されます
 
   } catch (e) {
     Logger.log(`エラー in addHistoryRecord: ${e.toString()}`);
@@ -389,10 +408,10 @@ function sortSheetByDateDesc(sheet) {
     const lastRow = sheet.getLastRow();
     if (lastRow <= 1) return; // データがない場合はスキップ
 
-    // ソート対象をA～P列（履歴→まで）に制限
-    // 履歴列（Q列以降）はソート不要で、含めるとタイムアウトの原因になる
-    const sortColumns = COLUMNS.HISTORY_HEADER + 1; // 16列（A～P）
-    const dataRange = sheet.getRange(2, 1, lastRow - 1, sortColumns);
+    const lastCol = sheet.getLastColumn();
+
+    // 全列をソート対象にする（履歴列も含めて、データのずれを防ぐ）
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
 
     // 1列（投稿日時）で降順ソート
     dataRange.sort({column: 1, ascending: false});
