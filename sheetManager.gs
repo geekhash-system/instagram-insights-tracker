@@ -258,6 +258,7 @@ function updateMediaData(sheet, media, insights) {
       media.permalink || "",
       false, // PR（デフォルトfalse、手動で変更）
       impressions,
+      "", // IMP数（7日目）は空欄（7日後に自動入力される）
       reach,
       media.like_count || 0,
       media.comments_count || 0,
